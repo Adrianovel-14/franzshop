@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Franzshopp · Herramientas Total, sin vueltas</title>
+<meta name="description" content="Herramientas Total con garantía. Elige, agrega y envía tu pedido por WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./page.css">
+</head>
+<body>
+<a class="skip" href="#catalogo">Ir al catálogo</a>
+
+<header class="top">
+  <div class="container top__row">
+    <a class="wordmark" href="#">Franzshopp</a>
+    <nav class="top__nav" aria-label="Principal">
+      <a href="#lineas">Líneas</a>
+      <a href="#combos">Combos</a>
+      <a href="#catalogo">Catálogo</a>
+    </nav>
+    <button type="button" class="btn btn--secondary" data-cart-open>Pedido <span class="badge" data-cart-count hidden>0</span></button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        <h1 id="hero-h" class="display reveal"><span>Herramientas</span><span class="hot">Total,</span><span>sin vueltas</span></h1>
+        <p class="lead">Elige, agrega y envía el pedido. Nosotros lo despachamos.</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#catalogo">Ver catálogo</a>
+          <a class="btn btn--secondary" data-wa href="https://wa.me/51955769076">WhatsApp</a>
+        </div>
+      </div>
+      <figure class="counter" data-tilt="10">
+        <div class="counter__in" data-tilt-inner>
+          <div class="photo" data-slot="hero" data-alt="Llave de impacto 1750Nm 20V de Total">
+            <span class="stand" aria-hidden="true">Foto de la llave de impacto 1750Nm</span>
+          </div>
+          <figcaption class="counter__cap">
+            <span class="counter__name">Llave de impacto 1750Nm 20V, con 2 baterías 8Ah</span>
+            <span class="counter__price num">S/ 1,085</span>
+          </figcaption>
+          <button type="button" class="btn btn--secondary" data-add="llave-de-impacto-1750nm-20v"><span data-add-label>Agregar</span></button>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="record" id="lineas" aria-labelledby="rec-h">
+    <div class="container">
+      <h2 id="rec-h" class="sec-title">Nueve líneas</h2>
+      <ol class="record__list" data-cats data-tpl="#cat"></ol>
+    </div>
+  </section>
+
+  <section class="poster" aria-label="Envíos">
+    <div class="container">
+      <p class="poster__line"><span>Envío a todo</span><span>el Perú</span></p>
+      <p class="poster__sub">Con garantía en cada producto y asesoría antes de comprar.</p>
+    </div>
+  </section>
+
+  <section class="combos" id="combos" aria-labelledby="combos-h">
+    <div class="container">
+      <div class="sec-head">
+        <h2 id="combos-h" class="sec-title">Combos</h2>
+        <p>Varias herramientas, las mismas baterías 20V.</p>
+      </div>
+      <ul class="rail" data-list="combos" data-tpl="#card" tabindex="0" aria-label="Combos"></ul>
+    </div>
+  </section>
+
+  <section class="catalog" id="catalogo" aria-labelledby="cat-h" data-catalog data-tpl="#card" data-page="8">
+    <div class="container">
+      <div class="sec-head">
+        <h2 id="cat-h" class="sec-title">Catálogo</h2>
+        <label class="search"><span>Buscar</span><input type="search" data-search placeholder="Taladro, amoladora, 42V" autocomplete="off"></label>
+      </div>
+      <div class="chips" data-chips role="group" aria-label="Filtrar por línea"></div>
+      <p class="count" data-count aria-live="polite"></p>
+      <ul class="grid" data-grid></ul>
+      <button type="button" class="btn btn--secondary more" data-more hidden>Ver todos</button>
+      <noscript><p>Para ver el catálogo completo escríbenos al <a href="https://wa.me/51955769076">+51 955 769 076</a>.</p></noscript>
+    </div>
+  </section>
+
+  <section class="band--red" aria-labelledby="order-h">
+    <div class="container order__grid">
+      <div class="order__copy">
+        <h2 id="order-h">Tu pedido, escrito solo</h2>
+        <p>Lo que agregas se arma como mensaje. Lo envías y te confirmamos stock y envío.</p>
+        <a class="btn btn--onred" data-wa href="https://wa.me/51955769076">Enviar por WhatsApp</a>
+      </div>
+      <pre class="msg" data-msg aria-label="Mensaje que se enviará por WhatsApp">Hola Franzshopp, quisiera información sobre sus herramientas.</pre>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__cols">
+    <div><p class="wordmark">Franzshopp</p><p>Herramientas Total con garantía.</p></div>
+    <div><p class="foot__h">Pedidos</p><p><a href="https://wa.me/51955769076">+51 955 769 076</a></p></div>
+    <div><p class="foot__h">Tienda</p><p class="slot-fact">Dirección y horario: pendiente</p></div>
+  </div>
+</footer>
+
+<dialog class="cart" data-cart aria-labelledby="cart-h">
+  <div class="cart__head">
+    <h2 id="cart-h">Tu pedido</h2>
+    <button type="button" class="btn btn--secondary" data-cart-close>Cerrar</button>
+  </div>
+  <p data-cart-empty>Aún no agregas nada.</p>
+  <ul class="cart__lines" data-cart-lines></ul>
+  <p class="cart__total">Total <strong class="num" data-cart-total>S/ 0</strong></p>
+  <a class="btn btn--primary cart__send" data-wa href="https://wa.me/51955769076">Enviar por WhatsApp</a>
+</dialog>
+
+<template id="cat"><li><a class="rec" href="#catalogo"><span class="rec__name" data-f="nombre"></span><span class="rec__n" data-f="total"></span></a></li></template>
+<template id="card"><li class="card" data-tilt="7">
+  <div class="card__in" data-tilt-inner>
+    <div class="photo photo--card" data-slot><span class="stand" data-stand aria-hidden="true"></span></div>
+    <h3 class="card__name" data-f="nombre"></h3>
+    <p class="card__inc" data-f="incluye"></p>
+    <div class="card__foot">
+      <span class="card__price num" data-f="precio"></span>
+      <button type="button" class="btn btn--small" data-add><span data-add-label>Agregar</span></button>
+    </div>
+  </div>
+</li></template>
+
+<script src="../shared/data.js"></script>
+<script src="../shared/tienda.js"></script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Capturas y pruebas locales
+mockups/shots/
+.hallmark/
+*.log
+# Exportaciones grandes del catálogo (se guardan aparte)
+franzshopp-catalogo*.json
+# Configuración local de Claude
+.claude/settings.local.json
+.claude/skills/
