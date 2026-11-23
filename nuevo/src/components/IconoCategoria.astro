@@ -1,0 +1,122 @@
+---
+/* Dibujos de línea propios para cada categoría (64 × 64, trazo redondeado).
+   El color sale de "currentColor", así se tiñen al pasar el mouse. */
+interface Props { id: string; class?: string }
+const { id, class: cls } = Astro.props;
+---
+<svg class={cls} viewBox="0 0 64 64" aria-hidden="true">
+  {id === 'combos' && (
+    /* maletín con taladro y llave asomando */
+    <>
+      <path d="M26 20v-4a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v4"/>
+      <rect x="7" y="20" width="50" height="34" rx="4"/>
+      <path d="M7 33h50"/>
+      <rect x="17" y="30" width="7" height="7" rx="1.5"/>
+      <rect x="40" y="30" width="7" height="7" rx="1.5"/>
+      <path d="M14 44h10m-5-4v8"/>
+      <path d="M36 46h12"/>
+    </>
+  )}
+  {id === 'inalambricas' && (
+    /* taladro con batería */
+    <>
+      <path d="M3 22h5"/>
+      <rect x="8" y="17" width="9" height="10" rx="2"/>
+      <rect x="17" y="13" width="32" height="18" rx="6"/>
+      <path d="M38 18v8M43 18v8"/>
+      <path d="M29 31l-3 15h12l2-15"/>
+      <path d="M29 35h-3v5h2"/>
+      <rect x="20" y="46" width="26" height="10" rx="2.5"/>
+      <path d="M24 51h5"/>
+    </>
+  )}
+  {id === 'cabezales' && (
+    /* llave de impacto sin batería: contactos y la batería en línea punteada */
+    <>
+      <rect x="3" y="19" width="5" height="6" rx="1"/>
+      <rect x="8" y="16" width="10" height="12" rx="2"/>
+      <path d="M18 13h22a9 9 0 0 1 0 18H18z"/>
+      <path d="M36 18v8M41 18v8"/>
+      <path d="M27 31l-3 14h14l2-14"/>
+      <path d="M28 45v4M36 45v4"/>
+      <rect x="19" y="49" width="26" height="9" rx="2.5" stroke-dasharray="3 3.5"/>
+    </>
+  )}
+  {id === '42v-16v' && (
+    /* amoladora */
+    <>
+      <rect x="24" y="22" width="34" height="13" rx="6.5"/>
+      <path d="M46 26v5M51 26v5"/>
+      <rect x="12" y="19" width="13" height="19" rx="3"/>
+      <rect x="27" y="10" width="6" height="12" rx="3"/>
+      <path d="M18 38v4"/>
+      <path d="M4 44h28"/>
+      <path d="M6 42a12 7 0 0 1 24 0"/>
+      <path d="M58 28.5h3"/>
+    </>
+  )}
+  {id === 'electricas' && (
+    /* sierra circular con cable */
+    <>
+      <circle cx="24" cy="38" r="13" stroke-dasharray="3.2 2.4"/>
+      <circle cx="24" cy="38" r="3"/>
+      <path d="M7 34a17.5 17.5 0 0 1 33-8v8"/>
+      <path d="M3 51h42"/>
+      <path d="M34 22l8-10h10l-4 12h-8"/>
+      <path d="M52 14c6 0 8 5 8 10s-2 8-2 12"/>
+      <rect x="54" y="36" width="8" height="7" rx="1.5"/>
+      <path d="M56 43v3M60 43v3"/>
+    </>
+  )}
+  {id === 'baterias' && (
+    /* batería con rayo */
+    <>
+      <path d="M20 22v-6h24v6"/>
+      <rect x="10" y="22" width="44" height="30" rx="4"/>
+      <path d="M35 27l-8 12h7l-3 9 9-13h-7l2-8z"/>
+      <path d="M15 47h5"/>
+    </>
+  )}
+  {id === 'medicion' && (
+    /* nivel láser con sus líneas */
+    <>
+      <rect x="24" y="24" width="16" height="22" rx="3"/>
+      <rect x="28" y="29" width="8" height="5" rx="1"/>
+      <path d="M29 24v-4h6v4"/>
+      <path d="M27 46l-5 12M37 46l5 12M32 46v12"/>
+      <path d="M24 31.5L3 25M24 31.5L3 38M40 31.5L61 25M40 31.5L61 38" stroke-dasharray="3 3"/>
+    </>
+  )}
+  {id === 'accesorios' && (
+    /* matraca y dado */
+    <>
+      <circle cx="40" cy="21" r="11"/>
+      <rect x="36" y="17" width="8" height="8" rx="1"/>
+      <path d="M32 29L11 50a4 4 0 0 0 6 6l21-21"/>
+      <rect x="44" y="41" width="13" height="16" rx="2.5"/>
+      <path d="M44 47h13"/>
+    </>
+  )}
+  {id === 'wadfow' && (
+    /* destornilladores */
+    <>
+      <rect x="13" y="5" width="13" height="23" rx="5"/>
+      <path d="M17.5 11v11M21.5 11v11"/>
+      <path d="M19.5 28v21"/>
+      <path d="M17 49h5l-2.5 7z"/>
+      <rect x="38" y="10" width="13" height="21" rx="5"/>
+      <path d="M42.5 16v9M46.5 16v9"/>
+      <path d="M44.5 31v18"/>
+      <path d="M42 49l2.5 7 2.5-7"/>
+    </>
+  )}
+  {id === 'todo' && (
+    /* ver todo */
+    <>
+      <rect x="9" y="9" width="19" height="19" rx="4"/>
+      <rect x="36" y="9" width="19" height="19" rx="4"/>
+      <rect x="9" y="36" width="19" height="19" rx="4"/>
+      <path d="M45.5 38v15M38 45.5h15"/>
+    </>
+  )}
+</svg>

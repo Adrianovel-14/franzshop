@@ -1,0 +1,23 @@
+{
+  "name": "franzshopp-nuevo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fotos": "node scripts/copiar-fotos.mjs",
+    "dev": "npm run fotos && astro dev",
+    "build": "npm run fotos && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.9",
+    "astro": "^7.4.13",
+    "motion": "^14.14.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

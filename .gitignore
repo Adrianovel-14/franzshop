@@ -7,3 +7,6 @@ franzshopp-catalogo*.json
 # Configuración local de Claude
 .claude/settings.local.json
 .claude/skills/
+
+# Archivos de trabajo de Taste Skill
+.taste-skill/

@@ -1,0 +1,120 @@
+---
+import '../styles/global.css';
+import { categorias, productos, base, whatsapp, foto } from '../lib/datos';
+
+interface Props { title: string; description: string; image?: string }
+const { title, description, image } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const og = image ? new URL(image, Astro.site).href : undefined;
+
+// Datos mínimos para el buscador y el pedido en el navegador
+const mini = productos.map((p) => ({ id: p.id, n: p.nombre, c: p.cat, p: p.precio, f: foto(p), k: [p.potencia, p.incluye, p.uso].filter(Boolean).join(' ') }));
+const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.total }));
+---
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{title}</title>
+<meta name="description" content={description}>
+<link rel="canonical" href={canonical}>
+<meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:url" content={canonical}>
+{og && <meta property="og:image" content={og}>}
+<link rel="icon" href={`${base}/favicon.png`} type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+</head>
+<body>
+<a class="skip" href="#contenido">Ir al contenido</a>
+
+<header class="header">
+  <div class="wrap header__row">
+    <a class="logo" href={`${base}/`} aria-label="Franzshopp, inicio">
+      <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="560" height="220" />
+    </a>
+
+    <form class="search" role="search" action={`${base}/`} data-search>
+      <label for="q" class="visually-hidden">Buscar productos</label>
+      <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" name="q" type="search" placeholder="Buscar herramientas…" autocomplete="off" enterkeyhint="search"
+        role="combobox" aria-expanded="false" aria-controls="suggest" aria-autocomplete="list">
+      <kbd class="search__kbd" aria-hidden="true">/</kbd>
+      <ul id="suggest" class="suggest" role="listbox" hidden></ul>
+    </form>
+
+    <button type="button" class="cart-btn" data-cart-open aria-label="Ver mi pedido">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.3a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+      <span class="cart-btn__txt">Mi pedido</span>
+      <span class="cart-btn__n num" data-cart-count hidden>0</span>
+    </button>
+  </div>
+  <nav class="catbar" aria-label="Categorías">
+    <div class="wrap catbar__row">
+      <a class="catbar__btn" href={`${base}/#catalogo`} data-cat="todo">Todo</a>
+      {categorias.map((c) => <a class="catbar__btn" href={`${base}/?cat=${c.id}#catalogo`} data-cat={c.id}>{c.corto}</a>)}
+    </div>
+  </nav>
+</header>
+
+<main id="contenido">
+  <slot />
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <div>
+      <a class="logo" href={`${base}/`} aria-label="Franzshopp, inicio">
+        <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="560" height="220" />
+      </a>
+      <p class="footer__txt">Herramientas Total con garantía, asesoría y envío a todo el Perú.</p>
+      <a class="btn btn--line" href={`https://wa.me/${whatsapp}`}>Escribir por WhatsApp</a>
+    </div>
+    <div>
+      <h2 class="footer__h">Categorías</h2>
+      <ul class="footer__links">
+        {categorias.map((c) => <li><a href={`${base}/?cat=${c.id}#catalogo`} data-cat={c.id}>{c.nombre}</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <h2 class="footer__h">Contacto</h2>
+      <ul class="footer__links">
+        <li><a href={`https://wa.me/${whatsapp}`}>WhatsApp +51 955 769 076</a></li>
+        <li class="pending">Tienda en Arequipa, Perú (dirección por confirmar)</li>
+        <li class="pending">Horario: por confirmar</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer__base"><p>Franzshopp · Arequipa, Perú</p><p>Precios en soles</p></div>
+</footer>
+
+<dialog class="drawer" data-cart aria-labelledby="cart-h">
+  <div class="drawer__head">
+    <h2 id="cart-h">Mi pedido</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Cerrar pedido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer__body">
+    <p class="drawer__empty" data-cart-empty>Aún no agregas productos.</p>
+    <ul class="lines" data-cart-lines></ul>
+  </div>
+  <div class="drawer__foot">
+    <p class="drawer__total">Total <strong class="num" data-cart-total>S/ 0</strong></p>
+    <a class="btn btn--accent btn--full" data-wa href={`https://wa.me/${whatsapp}`}>Enviar pedido por WhatsApp</a>
+    <p class="drawer__note">Te confirmamos stock y costo de envío por el chat.</p>
+  </div>
+</dialog>
+
+<div class="toast" data-toast role="status" aria-live="polite"></div>
+
+<script type="application/json" id="fs-datos" set:html={JSON.stringify({ wa: whatsapp, base, p: mini, c: cats })}></script>
+<script>
+  import { iniciarTienda } from '../scripts/tienda';
+  iniciarTienda();
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 
    Campos de cada pantalla:
    - tema:      'noche' | 'navidad' | 'turquesa' | 'claro'  (colores de la pantalla)
+   - lugar:     (opcional) sale con un pin de ubicación y el dibujo del Misti (solo en el diseño nuevo)
    - etiqueta:  texto chico de arriba
    - titulo:    frase principal (corta, hasta ~7 palabras)
    - texto:     una línea de apoyo
@@ -47,9 +48,10 @@ window.FS_BANNERS = [
   },
   {
     tema: 'claro',
-    etiqueta: 'Envíos a todo el Perú',
-    titulo: 'Pide desde cualquier ciudad',
-    texto: 'Arma tu pedido y te confirmamos stock y envío por WhatsApp.',
+    lugar: 'Arequipa, Perú',
+    etiqueta: 'Somos de Arequipa',
+    titulo: 'Desde Arequipa a todo el Perú',
+    texto: 'Nuestra tienda está en Arequipa. Arma tu pedido y te confirmamos stock y envío por WhatsApp.',
     boton: { texto: 'Escribir por WhatsApp', ir: 'whatsapp' },
     productos: ['nivel-laser-12-lineas-20v', 'bateria-10ah-20v', 'taladro-percutor-166nm-20v'],
   },

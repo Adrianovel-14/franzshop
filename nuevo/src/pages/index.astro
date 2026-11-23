@@ -1,0 +1,178 @@
+---
+import Base from '../layouts/Base.astro';
+import Carrusel, { type Slide } from '../components/Carrusel';
+import IconoCategoria from '../components/IconoCategoria.astro';
+import { banners, categorias, productos, porId, foto, soles, minimoDe, base, whatsapp } from '../lib/datos';
+
+const hoy = new Date().toISOString().slice(0, 10);
+const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b) => {
+  const ir = b.boton?.ir ?? '#catalogo';
+  const boton = { texto: b.boton?.texto ?? 'Ver catálogo', href: '#catalogo' } as Slide['boton'];
+  if (ir === 'whatsapp') { boton.href = `https://wa.me/${whatsapp}`; boton.wa = true; }
+  else if (ir.startsWith('cat:')) { boton.cat = ir.slice(4); boton.href = `?cat=${boton.cat}#catalogo`; }
+  else if (ir.startsWith('buscar:')) boton.href = `?q=${encodeURIComponent(ir.slice(7))}#catalogo`;
+  else boton.href = ir;
+  const prods = (b.productos ?? []).map((id) => porId[id]).filter(Boolean).slice(0, 3).map((p) => ({
+    id: p.id, nombre: p.nombre, precio: p.precio, oferta: b.ofertas?.[p.id], foto: foto(p), href: `${base}/producto/${p.id}/`,
+  }));
+  return {
+    tema: b.tema ?? 'noche', etiqueta: b.etiqueta ?? '', titulo: b.titulo,
+    texto: b.desde ? (b.texto ?? '').replace('{desde}', soles(minimoDe(b.desde))) : (b.texto ?? ''),
+    boton, productos: prods,
+    destacado: b.desde ? { texto: 'Desde', valor: minimoDe(b.desde) } : undefined,
+    lugar: b.lugar,
+  };
+});
+
+const combos = productos.filter((p) => p.cat === 'combos' && p.foto).sort((a, b) => b.precio - a.precio).slice(0, 10);
+---
+<Base title="Franzshopp · Herramientas Total en Perú" description={`${productos.length} herramientas Total con garantía y envío a todo el Perú. Arma tu pedido y lo cerramos por WhatsApp.`}>
+  <h1 class="visually-hidden">Franzshopp, herramientas Total en Arequipa con envío a todo el Perú</h1>
+
+  <div class="wrap">
+    <Carrusel client:load slides={slides} />
+  </div>
+
+  <section class="wrap sec sec--cats" aria-labelledby="cats-h">
+    <div class="sec-head">
+      <h2 id="cats-h">Compra por categoría</h2>
+    </div>
+    <ul class="cats">
+      {categorias.map((c) => (
+        <li>
+          <a class="cat" href={`?cat=${c.id}#catalogo`} data-cat={c.id}>
+            <IconoCategoria id={c.id} class="cat__ico" />
+            <span class="cat__name">{c.nombre}</span>
+          </a>
+        </li>
+      ))}
+      <li>
+        <a class="cat" href="#catalogo" data-cat="todo">
+          <IconoCategoria id="todo" class="cat__ico" />
+          <span class="cat__name">Ver todo</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap strip" aria-label="Por qué comprar aquí">
+    <ul class="strip__row">
+      <li><strong class="num">{productos.length}</strong><span>herramientas Total en catálogo</span></li>
+      <li><strong>Línea 20V</strong><span>una batería para todas</span></li>
+      <li><strong>Todo el Perú</strong><span>envíos a cualquier ciudad</span></li>
+      <li><strong>WhatsApp</strong><span>pedido escrito y confirmado</span></li>
+    </ul>
+  </section>
+
+  <section class="wrap sec" aria-labelledby="feat-h">
+    <div class="sec-head">
+      <h2 id="feat-h">Combos más completos</h2>
+      <a href="?cat=combos#catalogo" class="sec-head__link" data-cat="combos">Ver los {categorias.find((c) => c.id === 'combos')?.total} combos</a>
+    </div>
+    <ul class="rail" aria-label="Combos">
+      {combos.map((p) => (
+        <li class="card">
+          <a class="card__open" href={`${base}/producto/${p.id}/`}>
+            <span class="card__media"><span class="card__pic"><img src={foto(p)} alt={p.nombre} width="600" height="600" loading="lazy" decoding="async" /></span><span class="badge badge--accent">Combo</span></span>
+            <span class="card__body"><span class="card__cat">{p.potencia ?? 'Combo'}</span><span class="card__name">{p.nombre}</span></span>
+          </a>
+          <div class="card__foot">
+            <span class="card__price num">{soles(p.precio)}</span>
+            <button type="button" class="add" data-add={p.id} aria-label={`Agregar ${p.nombre} al pedido`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Agregar</span></button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="wrap sec catalog" id="catalogo" aria-labelledby="cat-h">
+    <div class="sec-head">
+      <h2 id="cat-h">Catálogo</h2>
+      <p class="catalog__count num" data-result-count aria-live="polite">{productos.length} productos</p>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="tool-btn" data-filters-open aria-controls="filtros" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filtros <span class="tool-btn__n num" data-filter-n hidden>0</span>
+      </button>
+      <label class="tool-sort">
+        <span class="visually-hidden">Ordenar</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>
+        <select data-sort>
+          <option value="rel">Recomendados</option>
+          <option value="asc">Menor precio</option>
+          <option value="desc">Mayor precio</option>
+          <option value="az">Nombre A–Z</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="catalog__layout">
+      <div class="sheet-backdrop" data-filters-close hidden></div>
+      <aside class="filters" id="filtros" aria-label="Filtros" data-filters>
+        <div class="filters__head">
+          <h3 class="filters__title">Filtros</h3>
+          <button type="button" class="icon-btn" data-filters-close aria-label="Cerrar filtros"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="filters__scroll">
+          <fieldset class="filters__block">
+            <legend>Categoría</legend>
+            <ul class="filters__list" data-filter-list></ul>
+          </fieldset>
+          <fieldset class="filters__block">
+            <legend>Precio</legend>
+            <div class="price-range">
+              <label><span>Desde S/</span><input type="number" inputmode="numeric" min="0" step="10" data-min placeholder="0" name="min" autocomplete="off"></label>
+              <label><span>Hasta S/</span><input type="number" inputmode="numeric" min="0" step="10" data-max placeholder="1200" name="max" autocomplete="off"></label>
+            </div>
+          </fieldset>
+        </div>
+        <div class="filters__foot">
+          <button type="button" class="btn btn--line" data-clear>Limpiar</button>
+          <button type="button" class="btn btn--accent" data-filters-close data-apply>Ver productos</button>
+        </div>
+      </aside>
+
+      <div>
+        <div class="active-filters" data-active hidden></div>
+        <ul class="grid" data-grid>
+          {productos.filter((p) => p.foto).slice(0, 24).map((p) => (
+            <li class="card">
+              <a class="card__open" href={`${base}/producto/${p.id}/`}>
+                <span class="card__media"><span class="card__pic"><img src={foto(p)} alt={p.nombre} width="600" height="600" loading="lazy" decoding="async" /></span></span>
+                <span class="card__body"><span class="card__name">{p.nombre}</span></span>
+              </a>
+              <div class="card__foot"><span class="card__price num">{soles(p.precio)}</span></div>
+            </li>
+          ))}
+        </ul>
+        <div class="empty" data-empty hidden>
+          <p class="empty__h">No encontramos eso en el catálogo.</p>
+          <p>Escríbenos y te decimos si lo conseguimos.</p>
+          <a class="btn btn--accent" data-wa-search href={`https://wa.me/${whatsapp}`}>Preguntar por WhatsApp</a>
+        </div>
+        <button type="button" class="btn btn--line more" data-more hidden>Ver más productos</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap sec" aria-labelledby="how-h">
+    <div class="how">
+      <div class="how__copy">
+        <p class="eyebrow">Cómo se compra</p>
+        <h2 id="how-h">Tu pedido llega escrito al WhatsApp de la tienda</h2>
+        <ol class="how__steps">
+          <li><span class="num">01</span>Agrega las herramientas que necesitas.</li>
+          <li><span class="num">02</span>Abre tu pedido y revisa el mensaje con el total.</li>
+          <li><span class="num">03</span>Envíalo: te confirmamos stock y costo de envío.</li>
+        </ol>
+      </div>
+      <div class="phone">
+        <p class="phone__to"><span class="phone__av" aria-hidden="true">F</span>Franzshopp</p>
+        <pre class="phone__msg" data-msg>Hola Franzshopp, quisiera información sobre sus herramientas.</pre>
+        <a class="btn btn--accent btn--full" data-wa href={`https://wa.me/${whatsapp}`}>Enviar por WhatsApp</a>
+      </div>
+    </div>
+  </section>
+</Base>

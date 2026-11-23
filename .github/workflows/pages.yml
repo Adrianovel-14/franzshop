@@ -1,4 +1,6 @@
-# Publica la carpeta web/ en GitHub Pages cada vez que se sube un cambio a main
+# Publica las dos tiendas en GitHub Pages cada vez que se sube un cambio a main:
+#   /franzshop/        → tienda actual (carpeta web/)
+#   /franzshop/nuevo/  → diseño nuevo (carpeta nuevo/, hecho con Astro)
 name: Publicar tienda
 
 on:
@@ -23,9 +25,29 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: nuevo/package-lock.json
+      - name: Compilar el diseño nuevo
+        working-directory: nuevo
+        env:
+          BASE: /franzshop/nuevo
+          FOTOS: /franzshop
+        run: |
+          npm ci
+          npx astro build
+      - name: Juntar las dos tiendas
+        run: |
+          mkdir -p _site
+          cp -r web/. _site/
+          mkdir -p _site/nuevo
+          cp -r nuevo/dist/. _site/nuevo/
+          rm -rf _site/nuevo/fotos
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
