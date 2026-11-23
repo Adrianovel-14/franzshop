@@ -127,6 +127,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(
               <label><span>Desde S/</span><input type="number" inputmode="numeric" min="0" step="10" data-min placeholder="0" name="min" autocomplete="off"></label>
               <label><span>Hasta S/</span><input type="number" inputmode="numeric" min="0" step="10" data-max placeholder="1200" name="max" autocomplete="off"></label>
             </div>
+            <p class="price-hint" data-price-hint role="status" hidden></p>
           </fieldset>
         </div>
         <div class="filters__foot">
@@ -152,6 +153,10 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(
           <p class="empty__h">No encontramos eso en el catálogo.</p>
           <p>Escríbenos y te decimos si lo conseguimos.</p>
           <a class="btn btn--accent" data-wa-search href={`https://wa.me/${whatsapp}`}>Preguntar por WhatsApp</a>
+          <div class="empty__alt" data-alt hidden>
+            <p class="empty__alt-h">Quizás te sirve:</p>
+            <ul class="grid" data-alt-list></ul>
+          </div>
         </div>
         <button type="button" class="btn btn--line more" data-more hidden>Ver más productos</button>
       </div>

@@ -1,5 +1,5 @@
 // Tienda de Franzshopp (diseño nuevo). Se publica en https://franzshopp.com (Cloudflare Pages).
-// Mientras tanto sigue también en GitHub Pages bajo /franzshop/nuevo/ (el workflow pasa BASE, SITE y FOTOS).
+// BASE, SITE y FOTOS se pueden cambiar con variables de entorno (antes se usaban para la copia en GitHub Pages).
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 

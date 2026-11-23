@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { categorias, productos, base, whatsapp, foto, agotado, negocio, sitio } from '../lib/datos';
+import { categorias, productos, base, whatsapp, foto, agotado, negocio, sitio, diccionario, textoBusqueda } from '../lib/datos';
 
 interface Props { title: string; description: string; image?: string; noindex?: boolean }
 const { title, description, image, noindex = false } = Astro.props;
@@ -8,10 +8,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 const og = image ? new URL(image, Astro.site).href : undefined;
 
 // Datos mínimos para el buscador y el pedido en el navegador
-const mini = productos.map((p) => ({ id: p.id, n: p.nombre, c: p.cat, p: p.precio, f: foto(p), k: [p.potencia, p.incluye, p.uso].filter(Boolean).join(' '), ...(agotado(p.id) ? { a: 1 } : {}) }));
+const mini = productos.map((p) => ({ id: p.id, n: p.nombre, c: p.cat, p: p.precio, f: foto(p), k: textoBusqueda(p), ...(agotado(p.id) ? { a: 1 } : {}) }));
 const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.total }));
 // "<" escapado para que ningún texto del catálogo pueda cerrar la etiqueta <script> por error
-const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats }).replace(/</g, '\\u003c');
+const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats, d: diccionario }).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang="es">

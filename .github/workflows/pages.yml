@@ -1,11 +1,13 @@
-# Publica las dos tiendas en GitHub Pages cada vez que se sube un cambio a main:
-#   /franzshop/        → tienda actual (carpeta web/)
-#   /franzshop/nuevo/  → diseño nuevo (carpeta nuevo/, hecho con Astro)
-name: Publicar tienda
+# La tienda ahora vive en https://franzshopp.com (Cloudflare Pages se publica solo al subir a main).
+# GitHub Pages ya no publica la tienda: solo redirige los links viejos
+#   adrianovel-14.github.io/franzshop/...  →  franzshopp.com
+# para que nadie llegue a una página rota y Google no vea la tienda repetida.
+name: Redirigir links viejos a franzshopp.com
 
 on:
   push:
     branches: [main]
+    paths: ['.github/redireccion.html', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -25,27 +27,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: nuevo/package-lock.json
-      - name: Compilar el diseño nuevo
-        working-directory: nuevo
-        env:
-          BASE: /franzshop/nuevo
-          SITE: https://adrianovel-14.github.io
-          FOTOS: /franzshop
+      - name: Armar las páginas de redirección
         run: |
-          npm ci
-          npx astro build
-      - name: Juntar las dos tiendas
-        run: |
-          mkdir -p _site
-          cp -r web/. _site/
           mkdir -p _site/nuevo
-          cp -r nuevo/dist/. _site/nuevo/
-          rm -rf _site/nuevo/fotos
+          cp .github/redireccion.html _site/index.html
+          cp .github/redireccion.html _site/404.html
+          cp .github/redireccion.html _site/nuevo/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

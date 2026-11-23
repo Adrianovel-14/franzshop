@@ -1,10 +1,11 @@
 /* Franzshopp (tienda nueva): buscador, catálogo con filtros, pedido por WhatsApp. */
-type P = { id: string; n: string; c: string; p: number; f: string; k: string; a?: number; _q?: string };
+import { indexar, buscar, parecidos } from '../lib/buscar';
+
+type P = { id: string; n: string; c: string; p: number; f: string; k: string; a?: number };
 type C = { id: string; n: string; s: string; t: number };
 
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T | null;
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll(s)] as T[];
-const norm = (s: string) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const soles = (n: number) => 'S/ ' + Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const quieto = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: string) {
@@ -15,21 +16,22 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: s
 }
 
 export function iniciarTienda() {
-  const D = JSON.parse($('#fs-datos')!.textContent!) as { wa: string; base: string; sitio: string; p: P[]; c: C[] };
+  const D = JSON.parse($('#fs-datos')!.textContent!) as { wa: string; base: string; sitio: string; p: P[]; c: C[]; d?: string[] };
   const P = D.p, base = D.base;
   const cats = Object.fromEntries(D.c.map((c) => [c.id, c]));
   const byId = Object.fromEntries(P.map((p) => [p.id, p]));
-  P.forEach((p) => { p._q = norm([p.n, cats[p.c]?.n, p.k].join(' ')); });
+  const ix = indexar(P, (p) => p.n, (p) => p.k, D.d || []);
   const link = (id: string) => `${base}/producto/${id}/`;
   const wa = (t: string) => `https://wa.me/${D.wa}?text=${encodeURIComponent(t)}`;
   const avisame = (p: P) => wa(`Hola Franzshopp, ¿me avisan cuando tengan stock de: ${p.n}? ${D.sitio}/producto/${p.id}/`);
   const hay = (id: string) => Object.hasOwn(byId, id);
   // en "Recomendados" y en búsquedas, lo que no tiene stock va al final
   const stockPrimero = (a: P, b: P) => (a.a ? 1 : 0) - (b.a ? 1 : 0);
-  const score = (p: P, terms: string[]) => { const n = norm(p.n); return terms.reduce((s, t) => s + (n.startsWith(t) ? 3 : n.includes(t) ? 2 : 1), 0); };
+  // buscador: entiende plurales, tildes, 1 letra de error y el diccionario (web/diccionario.js)
   const busca = (q: string) => {
-    const terms = norm(q).split(/\s+/).filter(Boolean);
-    return { terms, list: P.filter((p) => terms.every((t) => p._q!.includes(t))) };
+    const r = buscar(ix, q);
+    const pts = (p: P) => r.puntaje.get(p) || 0;
+    return { conTexto: !r.vacia, list: r.lista, orden: (a: P, b: P) => stockPrimero(a, b) || pts(b) - pts(a) };
   };
 
   /* ---------- foto ---------- */
@@ -73,7 +75,7 @@ export function iniciarTienda() {
     if (!hay(id) || byId[id].a) return;
     n = Math.max(1, Math.floor(n) || 1);
     cart[id] = Math.min((cart[id] || 0) + n, 999); save(); sync();
-    toast('Agregado: ' + byId[id].n);
+    toast(cart[id] > 1 ? `Agregado: ${byId[id].n} (ya tienes ${cart[id]} en tu pedido)` : 'Agregado: ' + byId[id].n);
     const b = $('[data-cart-open]')!; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
   }
   function sync() {
@@ -150,12 +152,17 @@ export function iniciarTienda() {
   q.value = state.q;
 
   function results() {
-    const { terms, list: l0 } = busca(state.q);
-    const list = l0.filter((p) => (state.cat === 'todo' || p.c === state.cat) && (state.min == null || p.p >= state.min) && (state.max == null || p.p <= state.max));
+    const { conTexto, list: l0, orden } = busca(state.q);
+    // si "Desde" es mayor que "Hasta", se usa el rango al derecho (y se avisa en el panel de filtros)
+    const alReves = state.min != null && state.max != null && state.min > state.max;
+    const lo = alReves ? state.max : state.min, hi = alReves ? state.min : state.max;
+    const list = l0.filter((p) => (state.cat === 'todo' || p.c === state.cat) && (lo == null || p.p >= lo) && (hi == null || p.p <= hi));
+    const hint = $('[data-price-hint]');
+    if (hint) { hint.hidden = !alReves; hint.textContent = alReves ? `"Desde" era mayor que "Hasta": te mostramos de ${soles(lo!)} a ${soles(hi!)}.` : ''; }
     if (state.sort === 'asc') list.sort((a, b) => a.p - b.p);
     else if (state.sort === 'desc') list.sort((a, b) => b.p - a.p);
     else if (state.sort === 'az') list.sort((a, b) => a.n.localeCompare(b.n, 'es'));
-    else if (terms.length) list.sort((a, b) => stockPrimero(a, b) || score(b, terms) - score(a, terms));
+    else if (conTexto) list.sort(orden);
     else list.sort((a, b) => stockPrimero(a, b) || (b.f ? 1 : 0) - (a.f ? 1 : 0));
     return list;
   }
@@ -168,6 +175,10 @@ export function iniciarTienda() {
     more.hidden = shown.length >= list.length;
     more.textContent = `Ver más productos (${list.length - shown.length})`;
     $('[data-empty]')!.hidden = list.length > 0;
+    // sin resultados: "Quizás te sirve" con lo más parecido (sin contar filtros de categoría o precio)
+    const alt = list.length || !state.q ? [] : parecidos(ix, state.q, 4);
+    $('[data-alt]')!.hidden = !alt.length;
+    $('[data-alt-list]')!.replaceChildren(...alt.map(card));
     $<HTMLAnchorElement>('[data-wa-search]')!.href = wa('Hola Franzshopp, ¿tienen ' + (state.q || 'este producto') + '?');
     $('[data-result-count]')!.textContent = list.length === 1 ? '1 producto' : list.length + ' productos';
     const act = $('[data-active]')!; act.replaceChildren();
@@ -254,11 +265,14 @@ export function iniciarTienda() {
   const sug = $('#suggest')!;
   let active = -1, t = 0;
   function suggest() {
-    const { terms, list } = busca(q.value);
-    if (!terms.length) { closeSug(); return; }
-    list.sort((a, b) => stockPrimero(a, b) || score(b, terms) - score(a, terms));
+    const { conTexto, list, orden } = busca(q.value);
+    if (!conTexto) { closeSug(); return; }
+    list.sort(orden);
     sug.replaceChildren();
-    list.slice(0, 6).forEach((p, i) => {
+    // sin resultados: se muestran los más parecidos en vez de una lista vacía
+    const mostrar = list.length ? list : parecidos(ix, q.value, 4);
+    if (!list.length && mostrar.length) { const h = el('li', 'suggest__head', 'No lo encontramos tal cual. Quizás te sirve:'); h.setAttribute('role', 'presentation'); sug.append(h); }
+    mostrar.slice(0, 6).forEach((p, i) => {
       const li = el('li', 'suggest__item'); li.id = 'sg-' + i; li.setAttribute('role', 'option'); li.dataset.href = link(p.id);
       li.append(pic(p, 'suggest__pic'));
       const tx = el('span', 'suggest__txt'); tx.append(el('span', 'suggest__name', p.n), el('span', 'suggest__cat', p.a ? 'Sin stock por ahora' : cats[p.c]?.n || ''));

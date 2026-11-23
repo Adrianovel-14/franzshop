@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Franzshopp se mudó a franzshopp.com</title>
+<!-- La tienda vive ahora en franzshopp.com. Esta página solo redirige los links viejos de GitHub Pages. -->
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://franzshopp.com/">
+<meta http-equiv="refresh" content="0; url=https://franzshopp.com/">
+<script>
+  // /franzshop/nuevo/producto/x/ → https://franzshopp.com/producto/x/ (el resto, a la portada)
+  var p = location.pathname.replace(/^\/franzshop(\/nuevo)?/, '');
+  if (!/^\/(producto\/[a-z0-9-]+\/?)?$/.test(p)) p = '/';
+  location.replace('https://franzshopp.com' + p + location.search);
+</script>
+<style>body{font:16px/1.5 system-ui,sans-serif;display:grid;place-items:center;min-height:90vh;margin:0;color:#10202c}</style>
+</head>
+<body>
+<p>Franzshopp se mudó a <a href="https://franzshopp.com/">franzshopp.com</a>.</p>
+</body>
+</html>

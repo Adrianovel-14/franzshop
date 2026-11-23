@@ -3,6 +3,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
+import { indexar, buscar } from './buscar';
 
 export type Producto = {
   id: string; nombre: string; marca: string; cat: string; precio: number;
@@ -22,7 +23,7 @@ function leer(archivo: string) {
   runInNewContext(readFileSync(ruta, 'utf8'), { window });
   return window;
 }
-const w = { ...leer('data.js'), ...leer('banners.js'), ...leer('agotados.js') } as any;
+const w = { ...leer('data.js'), ...leer('banners.js'), ...leer('agotados.js'), ...leer('diccionario.js') } as any;
 
 export const tienda = w.FS as { tienda: string; whatsapp: string; categorias: Categoria[]; productos: Producto[] };
 export const productos = tienda.productos;
@@ -39,6 +40,19 @@ for (const id of listaAgotados) {
 }
 const setAgotados = new Set(listaAgotados);
 export const agotado = (id: string) => setAgotados.has(id);
+
+// Diccionario del buscador (web/diccionario.js). Al armar la tienda se avisa si una palabra no encuentra nada.
+export const diccionario: string[] = Array.isArray(w.FS_DICCIONARIO) ? w.FS_DICCIONARIO.map((s: unknown) => String(s).trim()).filter((s: string) => s.includes('=')) : [];
+export const textoBusqueda = (p: Producto) => [catPorId[p.cat]?.nombre, p.marca, p.potencia, p.incluye, p.uso].filter(Boolean).join(' ');
+{
+  const ix = indexar(productos, (p) => p.nombre, textoBusqueda, []);
+  for (const linea of diccionario) {
+    const [k, v = ''] = linea.split('=');
+    for (const op of v.split(',').map((x) => x.trim()).filter(Boolean)) {
+      if (!buscar(ix, op).lista.length) console.warn(`[diccionario.js] "${k.trim()} = ${op}": ningún producto tiene "${op}". Revisa cómo está escrito.`);
+    }
+  }
+}
 
 // Datos del negocio (pie de página, mensajes y, más adelante, Google)
 export const negocio = {
