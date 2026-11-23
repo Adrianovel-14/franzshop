@@ -1,15 +1,17 @@
 ---
 import '../styles/global.css';
-import { categorias, productos, base, whatsapp, foto } from '../lib/datos';
+import { categorias, productos, base, whatsapp, foto, agotado, negocio, sitio } from '../lib/datos';
 
-interface Props { title: string; description: string; image?: string }
-const { title, description, image } = Astro.props;
+interface Props { title: string; description: string; image?: string; noindex?: boolean }
+const { title, description, image, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const og = image ? new URL(image, Astro.site).href : undefined;
 
 // Datos mínimos para el buscador y el pedido en el navegador
-const mini = productos.map((p) => ({ id: p.id, n: p.nombre, c: p.cat, p: p.precio, f: foto(p), k: [p.potencia, p.incluye, p.uso].filter(Boolean).join(' ') }));
+const mini = productos.map((p) => ({ id: p.id, n: p.nombre, c: p.cat, p: p.precio, f: foto(p), k: [p.potencia, p.incluye, p.uso].filter(Boolean).join(' '), ...(agotado(p.id) ? { a: 1 } : {}) }));
 const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.total }));
+// "<" escapado para que ningún texto del catálogo pueda cerrar la etiqueta <script> por error
+const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats }).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang="es">
@@ -18,7 +20,7 @@ const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.to
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content={description}>
-<link rel="canonical" href={canonical}>
+{noindex ? <meta name="robots" content="noindex"> : <link rel="canonical" href={canonical}>}
 <meta name="theme-color" content="#ffffff">
 <meta property="og:type" content="website">
 <meta property="og:title" content={title}>
@@ -36,7 +38,7 @@ const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.to
 <header class="header">
   <div class="wrap header__row">
     <a class="logo" href={`${base}/`} aria-label="Franzshopp, inicio">
-      <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="560" height="220" />
+      <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="480" height="183" />
     </a>
 
     <form class="search" role="search" action={`${base}/`} data-search>
@@ -70,9 +72,9 @@ const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.to
   <div class="wrap footer__grid">
     <div>
       <a class="logo" href={`${base}/`} aria-label="Franzshopp, inicio">
-        <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="560" height="220" />
+        <img class="logo__img" src={`${base}/logo-franzshopp.png`} alt="Franzshopp" width="480" height="183" />
       </a>
-      <p class="footer__txt">Herramientas Total con garantía, asesoría y envío a todo el Perú.</p>
+      <p class="footer__txt">Herramientas Total con garantía y asesoría. Despachamos desde {negocio.ciudad} a todo el Perú.</p>
       <a class="btn btn--line" href={`https://wa.me/${whatsapp}`}>Escribir por WhatsApp</a>
     </div>
     <div>
@@ -85,12 +87,13 @@ const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.to
       <h2 class="footer__h">Contacto</h2>
       <ul class="footer__links">
         <li><a href={`https://wa.me/${whatsapp}`}>WhatsApp +51 955 769 076</a></li>
-        <li class="pending">Tienda en Arequipa, Perú (dirección por confirmar)</li>
-        <li class="pending">Horario: por confirmar</li>
+        <li>Atención: {negocio.horario}</li>
+        <li>Envíos a todo el Perú desde {negocio.ciudad}</li>
+        <li>{negocio.recojo}</li>
       </ul>
     </div>
   </div>
-  <div class="wrap footer__base"><p>Franzshopp · Arequipa, Perú</p><p>Precios en soles</p></div>
+  <div class="wrap footer__base"><p>Franzshopp · Arequipa, Perú · Precios en soles</p><p>Desarrollado por MistiCode</p></div>
 </footer>
 
 <dialog class="drawer" data-cart aria-labelledby="cart-h">
@@ -105,13 +108,13 @@ const cats = categorias.map((c) => ({ id: c.id, n: c.nombre, s: c.corto, t: c.to
   <div class="drawer__foot">
     <p class="drawer__total">Total <strong class="num" data-cart-total>S/ 0</strong></p>
     <a class="btn btn--accent btn--full" data-wa href={`https://wa.me/${whatsapp}`}>Enviar pedido por WhatsApp</a>
-    <p class="drawer__note">Te confirmamos stock y costo de envío por el chat.</p>
+    <p class="drawer__note">Te confirmamos stock y envío (o recojo en almacén) por el chat.</p>
   </div>
 </dialog>
 
 <div class="toast" data-toast role="status" aria-live="polite"></div>
 
-<script type="application/json" id="fs-datos" set:html={JSON.stringify({ wa: whatsapp, base, p: mini, c: cats })}></script>
+<script type="application/json" id="fs-datos" set:html={datosJson}></script>
 <script>
   import { iniciarTienda } from '../scripts/tienda';
   iniciarTienda();

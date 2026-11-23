@@ -1,0 +1,24 @@
+---
+// Página para direcciones que no existen (link mal escrito, producto que ya no está, etc.)
+import Base from '../layouts/Base.astro';
+import { base, whatsapp } from '../lib/datos';
+---
+<Base title="Página no encontrada · Franzshopp" description="Esta página no existe. Vuelve a la tienda de herramientas Total de Franzshopp." noindex>
+  <section class="wrap no-existe">
+    <p class="eyebrow">Error 404</p>
+    <h1>Esta página no existe</h1>
+    <p>Puede que el link esté mal escrito o que el producto ya no esté en el catálogo. Busca arriba lo que necesitas o vuelve a la tienda.</p>
+    <div class="no-existe__acciones">
+      <a class="btn btn--accent" href={`${base}/`}>Volver a la tienda</a>
+      <a class="btn btn--line" href={`${base}/#catalogo`}>Ver catálogo</a>
+      <a class="btn btn--line" href={`https://wa.me/${whatsapp}?text=${encodeURIComponent('Hola Franzshopp, busco un producto y no lo encontré en la web.')}`}>Preguntar por WhatsApp</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .no-existe { padding-block: clamp(3rem, 10vw, 6rem); max-width: 40rem; }
+  .no-existe h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0.4rem 0 0.8rem; }
+  .no-existe p:not(.eyebrow) { color: var(--muted, #555); line-height: 1.6; }
+  .no-existe__acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.6rem; }
+</style>

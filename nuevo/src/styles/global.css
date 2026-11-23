@@ -101,14 +101,24 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .search { position: relative; }
 .search input {
   width: 100%; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
-  padding: 0 44px 0 42px; font-size: 16px; outline: none; transition: border-color .2s, box-shadow .2s, background-color .2s;
+  padding: 0 14px 0 42px; font-size: 16px; outline: none; transition: border-color .2s, box-shadow .2s, background-color .2s;
 }
 .search input::placeholder { color: var(--muted); }
 .search input:focus { border-color: rgb(var(--accent-rgb) / .6); box-shadow: 0 0 0 4px rgb(var(--accent-rgb) / .12); background: var(--surface-2); }
 .search input::-webkit-search-cancel-button { display: none; }
 .search__icon { position: absolute; left: 14px; top: 12px; color: var(--muted); pointer-events: none; }
 .search__kbd { display: none; position: absolute; right: 12px; top: 10px; font: 500 12px/22px var(--mono); padding: 0 7px; border: 1px solid var(--line-2); border-radius: 6px; color: var(--muted); }
-@media (min-width: 48rem) and (hover: hover) { .search__kbd { display: block; } }
+@media (min-width: 48rem) and (hover: hover) { .search__kbd { display: block; } .search input { padding-right: 44px; } }
+/* celulares chicos: logo y espacios más compactos para que el buscador tenga lugar */
+/* celular y tablet vertical: las sugerencias ocupan todo el ancho de la barra, no solo el del buscador */
+@media (max-width: 47.99rem) {
+  .header__row { position: relative; }
+  .search { position: static; display: grid; align-items: center; }
+  .search > input, .search > .search__icon { grid-area: 1 / 1; }
+  .search > .search__icon { position: relative; top: auto; left: auto; margin-left: 14px; z-index: 1; }
+  .suggest { left: var(--pad); right: var(--pad); top: calc(100% - 4px); max-height: 65svh; }
+}
+@media (max-width: 25rem) { .header__row { gap: 8px; } .logo__img { height: 28px; } .search input { padding-left: 36px; } .search > .search__icon { left: auto; margin-left: 11px; } }
 
 .suggest {
   position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 50; max-height: min(70vh, 520px); overflow: auto;
@@ -271,6 +281,12 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .card__price { font-size: 16px; font-weight: 500; }
 .badge { position: absolute; top: 10px; left: 10px; padding: 4px 9px; border-radius: 99px; font: 500 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .04em; background: rgb(255 255 255 / .9); border: 1px solid var(--line-2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .badge--accent { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+/* Sin stock: foto en gris, etiqueta oscura y botón "Avísame" */
+.badge--agotado { background: var(--ink); color: #fff; border-color: transparent; }
+.card--agotado .card__pic img, .pd__pic--agotado img { filter: grayscale(1); opacity: .6; }
+.card--agotado .card__price { color: var(--muted); }
+.add--avisame { text-decoration: none; color: var(--ink); background: #fff; border-color: var(--line-2); }
+.pd__agotado { margin: 4px 0 2px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-2); font-size: 15px; line-height: 1.5; }
 .add {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; height: 44px; padding: 0 12px;
   border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-2); font-size: 13px; font-weight: 600;
@@ -368,7 +384,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .crumbs { display: flex; align-items: center; gap: 8px; padding-top: 16px; font-size: 14px; color: var(--muted); }
 .crumbs a { text-decoration: none; padding-block: 12px; }
 @media (hover: hover) { .crumbs a:hover { color: var(--ink); } }
-.pd { display: grid; gap: 24px; }
+.pd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 .pd__pic { position: relative; border-radius: var(--r-lg); }
 .pd__img { position: relative; aspect-ratio: 1; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line-2); background: var(--surface-2); transition: transform .4s var(--ease); }
 .pd__img img { width: 100%; height: 100%; object-fit: cover; }
@@ -377,14 +393,17 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .pd__name { font-size: clamp(28px, 5vw, 48px); letter-spacing: -.04em; }
 .pd__price { font-size: 34px; font-weight: 500; color: var(--accent-2); }
 .pd__buy { display: flex; gap: 10px; }
-.pd__buy .btn { flex: 1; }
+.pd__buy .btn { flex: 1; min-width: 0; white-space: normal; text-align: center; line-height: 1.2; }
+@media (max-width: 22.5rem) { .pd__buy .btn { padding-inline: 14px; } }
 .pd__wa { font-size: 15px; color: var(--muted); padding-block: 12px; text-underline-offset: 4px; }
 @media (hover: hover) { .pd__wa:hover { color: var(--ink); } }
 .specs { margin: 8px 0 0; border-top: 1px solid var(--line); }
 .specs div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .specs dt { font: 500 12px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.specs dd { margin: 0; font-size: 15px; }
-@media (min-width: 56rem) { .pd { grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: start; padding-top: 8px; } .pd__info { position: sticky; top: calc(var(--sticky-top) + 24px); } }
+.specs dd { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.specs__list { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; list-style: disc; }
+.specs__list li::marker { color: var(--accent-2); }
+@media (min-width: 56rem) { .pd { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: start; padding-top: 8px; } .pd__info { position: sticky; top: calc(var(--sticky-top) + 24px); } }
 
 .qty { display: inline-flex; align-items: center; height: 48px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); }
 .qty button { width: 44px; height: 100%; border: 0; background: none; font-size: 20px; border-radius: 999px; }

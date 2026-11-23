@@ -51,7 +51,7 @@ window.FS_BANNERS = [
     lugar: 'Arequipa, Perú',
     etiqueta: 'Somos de Arequipa',
     titulo: 'Desde Arequipa a todo el Perú',
-    texto: 'Nuestra tienda está en Arequipa. Arma tu pedido y te confirmamos stock y envío por WhatsApp.',
+    texto: 'Despachamos desde nuestro almacén en Arequipa, o recoge tu pedido ahí. Te confirmamos stock y envío por WhatsApp.',
     boton: { texto: 'Escribir por WhatsApp', ir: 'whatsapp' },
     productos: ['nivel-laser-12-lineas-20v', 'bateria-10ah-20v', 'taladro-percutor-166nm-20v'],
   },

@@ -1,5 +1,5 @@
 /* Franzshopp (tienda nueva): buscador, catálogo con filtros, pedido por WhatsApp. */
-type P = { id: string; n: string; c: string; p: number; f: string; k: string; _q?: string };
+type P = { id: string; n: string; c: string; p: number; f: string; k: string; a?: number; _q?: string };
 type C = { id: string; n: string; s: string; t: number };
 
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T | null;
@@ -15,13 +15,17 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: s
 }
 
 export function iniciarTienda() {
-  const D = JSON.parse($('#fs-datos')!.textContent!) as { wa: string; base: string; p: P[]; c: C[] };
+  const D = JSON.parse($('#fs-datos')!.textContent!) as { wa: string; base: string; sitio: string; p: P[]; c: C[] };
   const P = D.p, base = D.base;
   const cats = Object.fromEntries(D.c.map((c) => [c.id, c]));
   const byId = Object.fromEntries(P.map((p) => [p.id, p]));
   P.forEach((p) => { p._q = norm([p.n, cats[p.c]?.n, p.k].join(' ')); });
   const link = (id: string) => `${base}/producto/${id}/`;
   const wa = (t: string) => `https://wa.me/${D.wa}?text=${encodeURIComponent(t)}`;
+  const avisame = (p: P) => wa(`Hola Franzshopp, ¿me avisan cuando tengan stock de: ${p.n}? ${D.sitio}/producto/${p.id}/`);
+  const hay = (id: string) => Object.hasOwn(byId, id);
+  // en "Recomendados" y en búsquedas, lo que no tiene stock va al final
+  const stockPrimero = (a: P, b: P) => (a.a ? 1 : 0) - (b.a ? 1 : 0);
   const score = (p: P, terms: string[]) => { const n = norm(p.n); return terms.reduce((s, t) => s + (n.startsWith(t) ? 3 : n.includes(t) ? 2 : 1), 0); };
   const busca = (q: string) => {
     const terms = norm(q).split(/\s+/).filter(Boolean);
@@ -42,18 +46,33 @@ export function iniciarTienda() {
 
   /* ---------- pedido ---------- */
   const KEY = 'franzshopp-pedido-nuevo';
-  let cart: Record<string, number> = {};
-  try { cart = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { cart = {}; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch { /* sin almacenamiento */ } };
-  const lines = () => Object.entries(cart).filter(([id, n]) => byId[id] && n > 0).map(([id, n]) => ({ p: byId[id], n }));
+  // Se lee el pedido guardado y se limpia: solo productos que existen, con stock y cantidades enteras de 1 a 999.
+  let cart: Record<string, number> = {};
+  const quitados: string[] = [];
+  try {
+    const crudo = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if (crudo && typeof crudo === 'object' && !Array.isArray(crudo)) {
+      for (const [id, v] of Object.entries(crudo)) {
+        const n = Math.floor(Number(v));
+        if (!hay(id) || !Number.isFinite(n) || n < 1) continue;
+        if (byId[id].a) { quitados.push(byId[id].n); continue; }
+        cart[id] = Math.min(n, 999);
+      }
+    }
+  } catch { cart = {}; }
+  save();
+  const lines = () => Object.entries(cart).filter(([id, n]) => hay(id) && !byId[id].a && n > 0).map(([id, n]) => ({ p: byId[id], n }));
   const total = () => lines().reduce((s, l) => s + l.p.p * l.n, 0);
   function mensaje() {
     const ls = lines();
     if (!ls.length) return 'Hola Franzshopp, quisiera información sobre sus herramientas.';
-    return ['Hola Franzshopp, quiero hacer este pedido:', '', ...ls.map((l) => `• ${l.n} x ${l.p.n} — ${soles(l.p.p * l.n)}`), '', `Total: ${soles(total())}`, '', 'Mi nombre:', 'Ciudad de envío:'].join('\n');
+    return ['Hola Franzshopp, quiero hacer este pedido:', '', ...ls.map((l) => `• ${l.n} x ${l.p.n} — ${soles(l.p.p * l.n)}`), '', `Total: ${soles(total())}`, '', 'Mi nombre:', 'Envío (ciudad) o recojo en almacén:'].join('\n');
   }
   function add(id: string, n = 1) {
-    cart[id] = (cart[id] || 0) + n; save(); sync();
+    if (!hay(id) || byId[id].a) return;
+    n = Math.max(1, Math.floor(n) || 1);
+    cart[id] = Math.min((cart[id] || 0) + n, 999); save(); sync();
     toast('Agregado: ' + byId[id].n);
     const b = $('[data-cart-open]')!; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
   }
@@ -79,7 +98,7 @@ export function iniciarTienda() {
       const minus = el('button', '', '−'); minus.type = 'button'; minus.setAttribute('aria-label', 'Quitar uno');
       const plus = el('button', '', '+'); plus.type = 'button'; plus.setAttribute('aria-label', 'Agregar uno');
       minus.onclick = () => { cart[p.id] = n - 1; if (cart[p.id] <= 0) delete cart[p.id]; save(); sync(); };
-      plus.onclick = () => { cart[p.id] = n + 1; save(); sync(); };
+      plus.onclick = () => { cart[p.id] = Math.min(n + 1, 999); save(); sync(); };
       qty.append(minus, el('output', 'num', String(n)), plus);
       info.append(qty);
       li.append(info, el('p', 'line__total num', soles(p.p * n)));
@@ -89,15 +108,17 @@ export function iniciarTienda() {
   }
 
   const tst = $('[data-toast]')!; let tt = 0;
-  function toast(m: string) { tst.textContent = m; tst.classList.add('is-on'); clearTimeout(tt); tt = window.setTimeout(() => tst.classList.remove('is-on'), 2200); }
+  function toast(m: string, ms = 2200) { tst.textContent = m; tst.classList.add('is-on'); clearTimeout(tt); tt = window.setTimeout(() => tst.classList.remove('is-on'), ms); }
+  if (quitados.length) toast(`Se quitó de tu pedido porque se agotó: ${quitados.join(', ')}`, 5000);
 
   /* ---------- tarjeta de producto ---------- */
   function card(p: P) {
-    const li = el('li', 'card');
+    const li = el('li', p.a ? 'card card--agotado' : 'card');
     const a = el('a', 'card__open'); a.href = link(p.id);
     const media = el('span', 'card__media');
     media.append(pic(p, 'card__pic', p.n));
-    if (p.c === 'cabezales') media.append(el('span', 'badge', 'Sin batería'));
+    if (p.a) media.append(el('span', 'badge badge--agotado', 'Sin stock'));
+    else if (p.c === 'cabezales') media.append(el('span', 'badge', 'Sin batería'));
     else if (p.c === 'combos') media.append(el('span', 'badge badge--accent', 'Combo'));
     a.append(media);
     const body = el('span', 'card__body');
@@ -105,10 +126,17 @@ export function iniciarTienda() {
     a.append(body);
     const foot = el('div', 'card__foot');
     foot.append(el('span', 'card__price num', soles(p.p)));
-    const b = el('button', 'add'); b.type = 'button'; b.dataset.add = p.id;
-    b.setAttribute('aria-label', 'Agregar ' + p.n + ' al pedido');
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Agregar</span>';
-    foot.append(b);
+    if (p.a) {
+      const w = el('a', 'add add--avisame'); w.href = avisame(p); w.target = '_blank'; w.rel = 'noopener';
+      w.setAttribute('aria-label', 'Sin stock. Pedir aviso por WhatsApp cuando llegue ' + p.n);
+      w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/></svg><span>Avísame</span>';
+      foot.append(w);
+    } else {
+      const b = el('button', 'add'); b.type = 'button'; b.dataset.add = p.id;
+      b.setAttribute('aria-label', 'Agregar ' + p.n + ' al pedido');
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Agregar</span>';
+      foot.append(b);
+    }
     li.append(a, foot);
     return li;
   }
@@ -127,8 +155,8 @@ export function iniciarTienda() {
     if (state.sort === 'asc') list.sort((a, b) => a.p - b.p);
     else if (state.sort === 'desc') list.sort((a, b) => b.p - a.p);
     else if (state.sort === 'az') list.sort((a, b) => a.n.localeCompare(b.n, 'es'));
-    else if (terms.length) list.sort((a, b) => score(b, terms) - score(a, terms));
-    else list.sort((a, b) => (b.f ? 1 : 0) - (a.f ? 1 : 0));
+    else if (terms.length) list.sort((a, b) => stockPrimero(a, b) || score(b, terms) - score(a, terms));
+    else list.sort((a, b) => stockPrimero(a, b) || (b.f ? 1 : 0) - (a.f ? 1 : 0));
     return list;
   }
   function render() {
@@ -154,14 +182,16 @@ export function iniciarTienda() {
     $('[data-apply]')!.textContent = list.length ? `Ver ${list.length} producto${list.length === 1 ? '' : 's'}` : 'Sin resultados';
     $$('.catbar__btn').forEach((b) => b.setAttribute('aria-current', String(b.dataset.cat === state.cat)));
     $$<HTMLInputElement>('input[name=cat]').forEach((i) => { i.checked = i.value === state.cat; });
+    // la dirección refleja siempre la búsqueda y categoría actuales (al recargar se ve lo mismo)
+    const u = new URL(location.href);
+    if (state.q) u.searchParams.set('q', state.q); else u.searchParams.delete('q');
+    if (state.cat !== 'todo') u.searchParams.set('cat', state.cat); else u.searchParams.delete('cat');
+    if (u.href !== location.href) history.replaceState(null, '', u);
     sync();
   }
   const toCatalog = () => $('#catalogo')?.scrollIntoView({ behavior: quieto() ? 'auto' : 'smooth', block: 'start' });
   function setCat(id: string, scroll = true) {
     state.cat = id; state.page = 1; render();
-    const u = new URL(location.href);
-    if (id === 'todo') u.searchParams.delete('cat'); else u.searchParams.set('cat', id);
-    history.replaceState(null, '', u);
     if (scroll) toCatalog();
   }
 
@@ -206,6 +236,8 @@ export function iniciarTienda() {
     fOpen.addEventListener('click', open);
     $$('[data-filters-close]').forEach((b) => b.addEventListener('click', close));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    // si se gira la tablet y pasa a vista de computadora, se cierra el panel (si no, la página queda sin desplazarse)
+    matchMedia('(min-width: 64rem)').addEventListener('change', (e) => { if (e.matches) close(); });
     const head = $('.filters__head', fPanel)!;
     let y0: number | null = null;
     head.addEventListener('pointerdown', (e) => { if (isSheet() && !(e.target as Element).closest('button')) { y0 = e.clientY; head.setPointerCapture(e.pointerId); } });
@@ -224,12 +256,12 @@ export function iniciarTienda() {
   function suggest() {
     const { terms, list } = busca(q.value);
     if (!terms.length) { closeSug(); return; }
-    list.sort((a, b) => score(b, terms) - score(a, terms));
+    list.sort((a, b) => stockPrimero(a, b) || score(b, terms) - score(a, terms));
     sug.replaceChildren();
     list.slice(0, 6).forEach((p, i) => {
       const li = el('li', 'suggest__item'); li.id = 'sg-' + i; li.setAttribute('role', 'option'); li.dataset.href = link(p.id);
       li.append(pic(p, 'suggest__pic'));
-      const tx = el('span', 'suggest__txt'); tx.append(el('span', 'suggest__name', p.n), el('span', 'suggest__cat', cats[p.c]?.n || ''));
+      const tx = el('span', 'suggest__txt'); tx.append(el('span', 'suggest__name', p.n), el('span', 'suggest__cat', p.a ? 'Sin stock por ahora' : cats[p.c]?.n || ''));
       li.append(tx, el('span', 'suggest__price num', soles(p.p)));
       sug.append(li);
     });
@@ -242,9 +274,6 @@ export function iniciarTienda() {
   function runSearch() {
     if (!grid) { form.submit(); return; }
     state.q = q.value.trim(); state.page = 1; state.cat = 'todo'; closeSug(); render();
-    const u = new URL(location.href); u.searchParams.delete('cat');
-    if (state.q) u.searchParams.set('q', state.q); else u.searchParams.delete('q');
-    history.replaceState(null, '', u);
     toCatalog();
   }
   form.addEventListener('submit', (e) => { if (grid) { e.preventDefault(); runSearch(); } });

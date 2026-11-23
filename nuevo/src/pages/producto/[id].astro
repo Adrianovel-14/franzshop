@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { productos, catPorId, foto, soles, waLink, base, type Producto } from '../../lib/datos';
+import { productos, catPorId, foto, soles, waLink, base, agotado, avisameTexto, negocio, type Producto } from '../../lib/datos';
 
 export function getStaticPaths() {
   return productos.map((p) => ({ params: { id: p.id }, props: { p } }));
@@ -12,9 +12,11 @@ const specs = [
   ['Incluye', p.incluye],
   ['Sirve para', p.uso ? p.uso.charAt(0).toUpperCase() + p.uso.slice(1) : undefined],
   ['Marca', p.marca],
-  ['Envío', 'A todo el Perú, se coordina por WhatsApp'],
+  ['Envío', `A todo el Perú desde ${negocio.ciudad}, se coordina por WhatsApp`],
+  ['Recojo', negocio.recojo],
 ].filter(([, v]) => v) as [string, string][];
-const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.foto)
+const sinStock = agotado(p.id);
+const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.foto && !agotado(x.id))
   .sort((a, b) => Math.abs(a.precio - p.precio) - Math.abs(b.precio - p.precio)).slice(0, 4);
 ---
 <Base title={`${p.nombre} · ${soles(p.precio)} · Franzshopp`} description={`${p.nombre} ${p.marca}. ${p.incluye ? 'Incluye ' + p.incluye + '. ' : ''}Pide por WhatsApp con envío a todo el Perú.`} image={p.foto ? foto(p) : undefined}>
@@ -24,7 +26,7 @@ const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.
   </nav>
 
   <section class="wrap pd">
-    <div class="pd__pic" data-tilt="6">
+    <div class:list={['pd__pic', { 'pd__pic--agotado': sinStock }]} data-tilt="6">
       <div class="pd__img">
         {p.foto ? <img src={foto(p)} alt={p.nombre} width="900" height="900" fetchpriority="high" /> : <span class="nopic">{p.nombre}</span>}
       </div>
@@ -33,17 +35,32 @@ const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.
       <p class="eyebrow">{cat?.nombre} · {p.marca}</p>
       <h1 class="pd__name">{p.nombre}</h1>
       <p class="pd__price num">{soles(p.precio)}</p>
-      <div class="pd__buy">
-        <div class="qty" role="group" aria-label="Cantidad">
-          <button type="button" data-step="-1" data-target="#pd-qty" aria-label="Quitar uno">−</button>
-          <output id="pd-qty" class="num">1</output>
-          <button type="button" data-step="1" data-target="#pd-qty" aria-label="Agregar uno">+</button>
-        </div>
-        <button type="button" class="btn btn--accent" data-add={p.id} data-qty-from="#pd-qty">Agregar al pedido</button>
-      </div>
-      <a class="pd__wa" href={waLink(`Hola Franzshopp, quiero información de: ${p.nombre} (${soles(p.precio)})`)}>Preguntar por este producto en WhatsApp</a>
+      {sinStock ? (
+        <>
+          <p class="pd__agotado"><strong>Sin stock por ahora.</strong> Escríbenos y te avisamos apenas llegue.</p>
+          <div class="pd__buy">
+            <a class="btn btn--accent" href={waLink(avisameTexto(p))} target="_blank" rel="noopener">Avísame por WhatsApp cuando haya stock</a>
+          </div>
+        </>
+      ) : (
+        <>
+          <div class="pd__buy">
+            <div class="qty" role="group" aria-label="Cantidad">
+              <button type="button" data-step="-1" data-target="#pd-qty" aria-label="Quitar uno">−</button>
+              <output id="pd-qty" class="num">1</output>
+              <button type="button" data-step="1" data-target="#pd-qty" aria-label="Agregar uno">+</button>
+            </div>
+            <button type="button" class="btn btn--accent" data-add={p.id} data-qty-from="#pd-qty">Agregar al pedido</button>
+          </div>
+          <a class="pd__wa" href={waLink(`Hola Franzshopp, quiero información de: ${p.nombre} (${soles(p.precio)})`)}>Preguntar por este producto en WhatsApp</a>
+        </>
+      )}
       <dl class="specs">
-        {specs.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+        {specs.map(([k, v]) => {
+          // "- Sierra - Taladro - ..." se muestra como lista, un artículo por línea
+          const items = k === 'Incluye' ? v.split(/(?:^|\s+)-\s+/).map((x) => x.trim()).filter(Boolean) : [];
+          return <div><dt>{k}</dt><dd>{items.length > 1 ? <ul class="specs__list">{items.map((x) => <li>{x}</li>)}</ul> : v}</dd></div>;
+        })}
       </dl>
     </div>
   </section>

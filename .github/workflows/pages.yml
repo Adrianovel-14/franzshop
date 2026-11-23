@@ -34,6 +34,7 @@ jobs:
         working-directory: nuevo
         env:
           BASE: /franzshop/nuevo
+          SITE: https://adrianovel-14.github.io
           FOTOS: /franzshop
         run: |
           npm ci

@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Carrusel, { type Slide } from '../components/Carrusel';
 import IconoCategoria from '../components/IconoCategoria.astro';
-import { banners, categorias, productos, porId, foto, soles, minimoDe, base, whatsapp } from '../lib/datos';
+import { banners, categorias, productos, porId, foto, soles, minimoDe, base, whatsapp, agotado } from '../lib/datos';
 
 const hoy = new Date().toISOString().slice(0, 10);
 const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b) => {
@@ -12,7 +12,8 @@ const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b
   else if (ir.startsWith('cat:')) { boton.cat = ir.slice(4); boton.href = `?cat=${boton.cat}#catalogo`; }
   else if (ir.startsWith('buscar:')) boton.href = `?q=${encodeURIComponent(ir.slice(7))}#catalogo`;
   else boton.href = ir;
-  const prods = (b.productos ?? []).map((id) => porId[id]).filter(Boolean).slice(0, 3).map((p) => ({
+  // en el carrusel no salen productos agotados
+  const prods = (b.productos ?? []).map((id) => porId[id]).filter((p) => p && !agotado(p.id)).slice(0, 3).map((p) => ({
     id: p.id, nombre: p.nombre, precio: p.precio, oferta: b.ofertas?.[p.id], foto: foto(p), href: `${base}/producto/${p.id}/`,
   }));
   return {
@@ -24,7 +25,7 @@ const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b
   };
 });
 
-const combos = productos.filter((p) => p.cat === 'combos' && p.foto).sort((a, b) => b.precio - a.precio).slice(0, 10);
+const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(p.id)).sort((a, b) => b.precio - a.precio).slice(0, 10);
 ---
 <Base title="Franzshopp · Herramientas Total en Perú" description={`${productos.length} herramientas Total con garantía y envío a todo el Perú. Arma tu pedido y lo cerramos por WhatsApp.`}>
   <h1 class="visually-hidden">Franzshopp, herramientas Total en Arequipa con envío a todo el Perú</h1>
@@ -59,7 +60,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto).sort((a, b)
     <ul class="strip__row">
       <li><strong class="num">{productos.length}</strong><span>herramientas Total en catálogo</span></li>
       <li><strong>Línea 20V</strong><span>una batería para todas</span></li>
-      <li><strong>Todo el Perú</strong><span>envíos a cualquier ciudad</span></li>
+      <li><strong>Todo el Perú</strong><span>envíos a cualquier ciudad o recojo en Arequipa</span></li>
       <li><strong>WhatsApp</strong><span>pedido escrito y confirmado</span></li>
     </ul>
   </section>
@@ -137,7 +138,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto).sort((a, b)
       <div>
         <div class="active-filters" data-active hidden></div>
         <ul class="grid" data-grid>
-          {productos.filter((p) => p.foto).slice(0, 24).map((p) => (
+          {productos.filter((p) => p.foto && !agotado(p.id)).slice(0, 24).map((p) => (
             <li class="card">
               <a class="card__open" href={`${base}/producto/${p.id}/`}>
                 <span class="card__media"><span class="card__pic"><img src={foto(p)} alt={p.nombre} width="600" height="600" loading="lazy" decoding="async" /></span></span>
@@ -165,7 +166,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto).sort((a, b)
         <ol class="how__steps">
           <li><span class="num">01</span>Agrega las herramientas que necesitas.</li>
           <li><span class="num">02</span>Abre tu pedido y revisa el mensaje con el total.</li>
-          <li><span class="num">03</span>Envíalo: te confirmamos stock y costo de envío.</li>
+          <li><span class="num">03</span>Envíalo: te confirmamos stock y coordinamos el envío o el recojo en almacén.</li>
         </ol>
       </div>
       <div class="phone">

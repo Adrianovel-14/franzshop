@@ -1,0 +1,14 @@
+# Cabeceras de seguridad y caché para Cloudflare Pages (franzshopp.com).
+# GitHub Pages ignora este archivo.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Fotos: el navegador las guarda 1 día (si se cambia una foto, se ve nueva al día siguiente).
+/fotos/*
+  Cache-Control: public, max-age=86400
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
