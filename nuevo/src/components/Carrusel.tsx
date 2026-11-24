@@ -1,7 +1,7 @@
 /* Carrusel de portada: campañas de web/banners.js.
    - Se desliza igual que la tienda actual: las pantallas van una al lado de la otra y el dedo
      las arrastra de verdad (scroll nativo con imán), así se siente suelto en el celular.
-   - Pasa solo cada 6 s; se detiene un rato si la persona lo toca, y no se mueve solo
+   - Pasa solo cada 6 s (la pantalla de la pistola que se desarma, 8,4 s); se detiene un rato si la persona lo toca, y no se mueve solo
      si el teléfono pide menos movimiento.
    - Toques de React Bits en la pantalla visible: título con desenfoque, brillo en la etiqueta
      y precio "desde" que cuenta. */
@@ -11,6 +11,7 @@ import BlurText from './reactbits/BlurText';
 import CountUp from './reactbits/CountUp';
 import ShinyText from './reactbits/ShinyText';
 import Navidad from './Navidad';
+import Heroe, { DURACION_HEROE, type HeroeSlide } from './Heroe';
 
 export type SlideProducto = { id: string; nombre: string; precio: number; oferta?: number; foto: string; href: string };
 export type Slide = {
@@ -19,12 +20,13 @@ export type Slide = {
   productos: SlideProducto[];
   destacado?: { texto: string; valor: number };
   lugar?: string;
+  heroe?: HeroeSlide;
 };
 
 const CADA = 6000;
 const soles = (n: number) => 'S/ ' + n.toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const brillo: Record<string, [string, string]> = {
-  noche: ['#7fe3ef', '#ffffff'], navidad: ['#f3cf7a', '#fff6dc'], turquesa: ['#e8fbfd', '#ffffff'], claro: ['#0b7d8f', '#7fe3ef'],
+  noche: ['#7fe3ef', '#ffffff'], total: ['#ffffff', '#06363d'], navidad: ['#f3cf7a', '#fff6dc'], turquesa: ['#e8fbfd', '#ffffff'], claro: ['#0b7d8f', '#7fe3ef'],
 };
 
 export default function Carrusel({ slides }: { slides: Slide[] }) {
@@ -61,14 +63,18 @@ export default function Carrusel({ slides }: { slides: Slide[] }) {
     return () => io.disconnect();
   }, [n]);
 
-  // avance automático
+  // avance automático: cada pantalla dura CADA (la de la pistola que se desarma, un poco más).
+  // Si la persona la está tocando o la pestaña no se ve, vuelve a probar en 1 s.
   useEffect(() => {
     if (quieto || n < 2) return;
-    const t = setInterval(() => {
+    let t = 0;
+    const tick = () => {
       if (Date.now() > espera.current && !document.hidden) ir(actualRef.current + 1, false);
-    }, CADA);
-    return () => clearInterval(t);
-  }, [quieto, n]);
+      else t = window.setTimeout(tick, 1000);
+    };
+    t = window.setTimeout(tick, slides[actual]?.heroe ? DURACION_HEROE : CADA);
+    return () => clearTimeout(t);
+  }, [quieto, n, actual]);
 
   return (
     <section className="slider" aria-roledescription="carrusel" aria-label="Campañas y ofertas">
@@ -142,8 +148,9 @@ export default function Carrusel({ slides }: { slides: Slide[] }) {
                 </div>
               </div>
 
-              <div className="slide__stage">
-                {s.productos.map((p, j) => (
+              <div className={`slide__stage${s.heroe ? ' slide__stage--heroe' : ''}`}>
+                {s.heroe && <Heroe h={s.heroe} activo={ve} quieto={!!quieto} visita={visita} primera={k === 0} />}
+                {!s.heroe && s.productos.map((p, j) => (
                   <a
                     key={p.id}
                     className={`slide__card slide__card--${'abc'[j]}`}

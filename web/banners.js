@@ -2,7 +2,8 @@
    Para cambiar una campaña (Navidad, Día del Padre, Cyber, etc.) edita solo este archivo.
 
    Campos de cada pantalla:
-   - tema:      'noche' | 'navidad' | 'turquesa' | 'claro'  (colores de la pantalla)
+   - tema:      'noche' | 'navidad' | 'turquesa' | 'claro' | 'total'  (colores de la pantalla;
+                'total' es el turquesa de los maletines, hecho para la pantalla de la pistola que se desarma)
    - lugar:     (opcional) sale con un pin de ubicación y el dibujo del Misti (solo en el diseño nuevo)
    - etiqueta:  texto chico de arriba
    - titulo:    frase principal (corta, hasta ~7 palabras)
@@ -17,6 +18,10 @@
                 Si pones una oferta, el precio normal sale tachado. No inventes ofertas: pon solo las reales.
    - desde:     (opcional) id de categoría; reemplaza {desde} en el texto por el precio más bajo de esa categoría
    - hasta:     (opcional) fecha 'AAAA-MM-DD'; después de esa fecha la pantalla deja de salir
+   - heroe:     (opcional, solo diseño nuevo) la pistola de impacto que se desarma, en vez de las 3 fotos.
+                Es solo visual, no lleva a ningún producto. Fotos sin fondo en nuevo/public/campanas:
+                { foto: cuerpo, dado: dado acostado, bateria: batería, cifra: 1750, unidad: 'N·m' }
+                Las posiciones de las piezas están medidas para estas fotos (global.css, "despiece").
 */
 window.FS_BANNERS = [
   {
@@ -30,12 +35,17 @@ window.FS_BANNERS = [
     hasta: '2026-12-31',
   },
   {
-    tema: 'noche',
+    tema: 'total',
     etiqueta: 'Distribuidor de herramientas Total',
     titulo: 'Herramientas Total, listas para tu obra',
     texto: 'Elige, agrega al pedido y lo cerramos por WhatsApp.',
     boton: { texto: 'Ver catálogo', ir: '#catalogo' },
     productos: ['combo-constructor-5-en-1-20v', 'llave-de-impacto-1750nm-20v', 'amoladora-1200-20v'],
+    // En el diseño nuevo, en vez de las 3 fotos sale esta herramienta animada (foto sin fondo en nuevo/public/campanas)
+    heroe: {
+      foto: 'campanas/pistola-impacto-1750.webp', dado: 'campanas/dado-impacto.webp', bateria: 'campanas/bateria-8ah.webp',
+      cifra: 1750, unidad: 'N·m',
+    },
   },
   {
     tema: 'turquesa',

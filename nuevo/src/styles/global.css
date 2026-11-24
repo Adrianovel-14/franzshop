@@ -505,3 +505,211 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .slide__misti { position: absolute; right: 0; bottom: 0; width: min(78%, 720px); height: auto; z-index: 0; pointer-events: none; }
 .slide__misti path { fill: rgb(var(--accent-rgb) / .10); }
 .slide__misti .slide__misti-nieve { fill: rgb(255 255 255 / .9); }
+
+/* ---------- pistola que se desarma en el carrusel (components/Heroe.tsx) ----------
+   Lienzo de 1500 × 980 unidades; se ajusta solo al espacio (ancho o alto, lo que alcance).
+   Medidas tomadas de las fotos de nuevo/public/campanas (armada):
+   cuerpo  x 428  y 60   ancho 644   (centrado; yunque a la altura y 214, base centrada en x 823)
+   dado    x 280  y 151  ancho 244   (boca en x 280, encaja hasta la nariz)
+   batería x 658  y 706  ancho 330   (los rieles quedan escondidos detrás de la base)
+   Desarmada: dado parado con centro en (210, 330); batería girada 90° con centro en (1300, 620).
+   Recorrido de 8,4 s; curva power2.inOut = cubic-bezier(.65, 0, .35, 1). */
+.slide__stage--heroe { min-height: 400px; }
+.heroe { position: absolute; inset: 0; container-type: size; --zoom: 1.2; } /* --zoom: qué tan cerca está la cámara con la pistola armada */
+.heroe__foco {
+  position: absolute; left: 50%; top: 48%; width: min(88cqw, 120cqh); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(15 164 183 / .5), rgb(15 164 183 / .16) 55%, transparent 72%);
+}
+.heroe__piso {
+  position: absolute; left: 50%; bottom: 3%; width: 40%; height: 6%; translate: -50% 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(0 0 0 / .5), transparent);
+}
+.heroe__flota {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; pointer-events: none;
+  width: min(100cqw, 153cqh); aspect-ratio: 1500 / 980;
+}
+.despiece { position: absolute; inset: 0; display: block; transform-origin: 50% 50%; transform: perspective(1600px) rotateY(-6deg) scale(var(--zoom)); }
+.despiece__pieza { position: absolute; display: block; }
+.despiece__pieza img { display: block; width: 100%; height: auto; -webkit-user-drag: none; }
+.despiece__cuerpo { left: 28.53%; top: 6.12%; width: 42.93%; z-index: 2; }
+.despiece__cuerpo img { filter: drop-shadow(0 18px 30px rgb(0 0 0 / .45)); }
+.despiece__dado { left: 18.67%; top: 15.41%; width: 16.27%; z-index: 3; }
+.despiece__dado img { filter: drop-shadow(0 0 1px rgb(127 227 239 / .7)) drop-shadow(0 10px 14px rgb(0 0 0 / .5)); }
+.despiece__bateria { left: 43.87%; top: 72.04%; width: 22%; z-index: 1; }
+.despiece__bateria img { filter: drop-shadow(0 14px 22px rgb(0 0 0 / .45)); }
+.despiece__guias { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0; overflow: visible; }
+.despiece__guias path { fill: none; stroke: rgb(127 227 239 / .55); stroke-width: 1.5; stroke-dasharray: 5 7; vector-effect: non-scaling-stroke; }
+/* nombres de las piezas */
+.despiece__nombre {
+  position: absolute; z-index: 5; translate: -50% 0; opacity: 0; max-width: 15em; text-align: center; text-wrap: balance;
+  padding: .4em .9em; border-radius: .8em; background: rgb(18 23 27 / .72); box-shadow: inset 0 0 0 1px rgb(127 227 239 / .4);
+  color: #e8fbfd; font-size: clamp(10px, 1.05vw, 14px); font-weight: 650; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase;
+}
+.despiece__nombre--dado { left: 14%; top: 48.5%; }
+.despiece__nombre--cuerpo { left: 54.87%; top: 82%; }
+.despiece__nombre--bateria { left: 86.67%; top: 82%; }
+.heroe__brillo {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  -webkit-mask: var(--img) center / 100% 100% no-repeat; mask: var(--img) center / 100% 100% no-repeat;
+}
+.heroe__brillo::before {
+  content: ''; position: absolute; top: -10%; bottom: -10%; left: 0; width: 40%; translate: -120% 0; rotate: 14deg;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .45), transparent);
+}
+/* golpe: en la boca del dado */
+.heroe__golpe { position: absolute; left: 18.67%; top: 21.84%; width: 12.3%; aspect-ratio: 1; translate: -50% -50%; z-index: 4; }
+.heroe__golpe > * { position: absolute; opacity: 0; }
+.heroe__giro { inset: 18%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 55%, rgb(127 227 239 / .9) 80%, transparent 100%); -webkit-mask: radial-gradient(closest-side, transparent 62%, #000 64%); mask: radial-gradient(closest-side, transparent 62%, #000 64%); }
+.heroe__onda { inset: 0; border-radius: 50%; border: 2px solid rgb(127 227 239 / .9); }
+.heroe__chispa { left: 50%; top: 50%; width: 46%; height: 3px; margin-top: -1.5px; border-radius: 3px; transform-origin: 0 50%; background: linear-gradient(90deg, #fff3c4, #ff9a3c 45%, transparent); }
+/* "clic" al encajar */
+.despiece__clic { position: absolute; width: 8%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; z-index: 4; opacity: 0;
+  border: 2px solid rgb(255 179 102 / .9); box-shadow: 0 0 18px rgb(255 179 102 / .6), inset 0 0 12px rgb(255 179 102 / .4); }
+.despiece__clic--dado { left: 34%; top: 21.84%; }
+.despiece__clic--bateria { left: 54.87%; top: 79.2%; }
+/* cifra: abajo a la izquierda, donde ninguna pieza pasa */
+.heroe__cifra { position: absolute; left: 0; bottom: 4%; display: grid; justify-items: start; line-height: 1; pointer-events: none; z-index: 6; }
+.heroe__cifra strong { font-size: clamp(36px, 4.4vw, 60px); font-weight: 700; letter-spacing: -.04em; background: linear-gradient(180deg, #fff, #7fe3ef); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.heroe__cifra > span { margin-top: 6px; font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: #ffb366; }
+/* celular y tablet: la pantalla va arriba a todo el ancho */
+@media (max-width: 52rem) {
+  .slide__stage--heroe { min-height: 0; aspect-ratio: 1.2; }
+  .heroe { --zoom: 1.3; }
+  .heroe__cifra { bottom: 0; }
+  .heroe__cifra strong { font-size: clamp(26px, 7.4vw, 44px); }
+  .heroe__cifra > span { font-size: 10px; }
+  .despiece__nombre { font-size: clamp(9px, 2.5vw, 13px); max-width: 9.5em; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroe__flota, .heroe__cifra { transition: opacity .5s var(--ease), scale .6s var(--ease), translate .6s var(--ease); }
+  .slide:not(.is-current) .heroe__flota { opacity: 0; scale: .94; }
+  .slide:not(.is-current) .heroe__cifra { opacity: 0; translate: 0 10px; }
+
+  .heroe__foco { animation: heroe-foco 4.6s ease-in-out infinite; }
+  .heroe__flota { animation: heroe-flota 4.6s ease-in-out infinite; }
+  .heroe__brillo::before { animation: heroe-brillo 5.5s var(--ease) 1s infinite; }
+  .despiece { animation: dz-cam 8.4s linear infinite, dz-vibra 8.4s linear infinite; }
+  .despiece__cuerpo { animation: dz-cuerpo 8.4s linear infinite; }
+  .despiece__dado { animation: dz-dado 8.4s linear infinite; }
+  .despiece__bateria { animation: dz-bateria 8.4s linear infinite; }
+  .despiece__guias { animation: dz-guias 8.4s linear infinite; }
+  .despiece__nombre { animation: dz-nombre 8.4s linear infinite; }
+  .despiece__nombre--cuerpo { animation-delay: .1s; }
+  .despiece__nombre--bateria { animation-delay: .2s; }
+  .heroe__giro { animation: heroe-girar .22s linear infinite, dz-rafaga 8.4s linear infinite; }
+  .heroe__onda { animation: dz-onda 8.4s linear infinite; }
+  .heroe__onda:nth-of-type(3) { animation-delay: .16s; }
+  .heroe__onda:nth-of-type(4) { animation-delay: .32s; }
+  .heroe__chispa { animation: dz-chispa 8.4s linear infinite; }
+  .heroe__chispa:nth-of-type(even) { animation-delay: .12s; }
+  .heroe__chispa:nth-of-type(3n) { animation-delay: .26s; }
+  .despiece__clic { animation: dz-clic 8.4s linear infinite; }
+  .despiece__clic--bateria { animation-delay: .05s; }
+  .slide:not(.is-current) .heroe *, .slide:not(.is-current) .heroe *::before { animation-play-state: paused; }
+}
+@keyframes heroe-flota { 50% { transform: translateY(-1.2%); } }
+@keyframes heroe-foco { 50% { scale: 1.08; opacity: .8; } }
+@keyframes heroe-brillo { 0% { translate: -120% 0; } 35%, 100% { translate: 300% 0; } }
+@keyframes heroe-girar { to { rotate: 1turn; } }
+
+/* tiempos (de 8,4 s): disparo 4,76–14,29 %  ·  se desarma 16,67→31,55 %  ·  nombres 29,76–63,1 %
+   cámara vuelve 66,67→81,55 %  ·  piezas encajan 68,45→85,12 %  ·  clic 85,12–90,5 % */
+@keyframes dz-cam {
+  0%, 16.67% { transform: perspective(1600px) rotateY(-6deg) scale(var(--zoom)); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  31.55%, 66.67% { transform: perspective(1600px) rotateY(-12deg) rotateX(3deg) scale(.95); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  81.55%, 100% { transform: perspective(1600px) rotateY(-6deg) scale(var(--zoom)); }
+}
+@keyframes dz-dado {
+  0%, 16.67% { transform: none; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  31.55%, 68.45% { transform: translate(-78.7%, 93.6%) rotate(90deg); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  85.12%, 100% { transform: none; }
+}
+@keyframes dz-cuerpo {
+  0%, 16.67% { transform: none; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  31.55%, 68.45% { transform: translateY(-2.5%); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  85.12%, 100% { transform: none; }
+}
+@keyframes dz-bateria {
+  0%, 16.67% { transform: none; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  31.55%, 68.45% { transform: translate(144.5%, -87.4%) rotate(-90deg); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  85.12%, 100% { transform: none; }
+}
+@keyframes dz-guias { 0%, 27% { opacity: 0; } 34%, 62% { opacity: 1; } 67%, 100% { opacity: 0; } }
+@keyframes dz-nombre {
+  0%, 29.76% { opacity: 0; transform: translateY(8px); animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
+  34.52%, 63.1% { opacity: 1; transform: none; }
+  66.67%, 100% { opacity: 0; transform: translateY(-4px); }
+}
+@keyframes dz-vibra {
+  0%, 4.76%, 14.29%, 85.12%, 87.5%, 100% { translate: 0 0; }
+  5.71% { translate: -1.5px .5px; } 6.67% { translate: 1px -1px; } 7.62% { translate: -1px 1px; } 8.57% { translate: 1.5px 0; }
+  9.52% { translate: -1px -.5px; } 10.48% { translate: 1px 1px; } 11.43% { translate: -1.5px 0; } 12.38% { translate: 1px -.5px; }
+  13.33% { translate: -.5px .5px; }
+  85.7% { translate: 0 2px; } 86.3% { translate: 0 -1px; } 86.9% { translate: 0 .5px; }
+}
+@keyframes dz-rafaga { 0%, 4.7% { opacity: 0; } 5.9%, 13.6% { opacity: 1; } 16%, 100% { opacity: 0; } }
+@keyframes dz-onda {
+  0%, 4.7% { opacity: 0; scale: .3; }
+  4.76% { opacity: .9; scale: .3; }
+  9.5%, 100% { opacity: 0; scale: 1.6; }
+}
+@keyframes dz-chispa {
+  0%, 4.7% { opacity: 0; transform: rotate(var(--a)) translateX(20%) scaleX(.2); }
+  4.76% { opacity: 1; transform: rotate(var(--a)) translateX(20%) scaleX(.2); }
+  8% { opacity: 1; transform: rotate(var(--a)) translateX(70%) scaleX(1); }
+  10.7%, 100% { opacity: 0; transform: rotate(var(--a)) translateX(120%) scaleX(.3); }
+}
+@keyframes dz-clic {
+  0%, 85% { opacity: 0; scale: .4; }
+  85.12% { opacity: 1; scale: .4; }
+  90.5%, 100% { opacity: 0; scale: 1.8; }
+}
+
+/* ---------- fondo 'total' para la pantalla de la pistola (tema en web/banners.js) ----------
+   Turquesa de los maletines Total, textura de puntos y reflejos que cruzan lento.
+   Al desarmarse salen cotas con medidas, como en un plano técnico. */
+.slide--total {
+  --slide-bg: radial-gradient(75% 90% at 70% 40%, #22c6d8, #0fa4b7 38%, #0a7f8e 72%, #06606c);
+  --slide-ink: #fff; --slide-muted: rgb(255 255 255 / .88); --slide-tag-bg: rgb(0 0 0 / .18); --slide-price: #7fe3ef;
+}
+/* textura de puntos como la del maletín */
+.slide--total::before {
+  background-image: radial-gradient(rgb(255 255 255 / .16) 1px, transparent 1.6px); background-size: 7px 7px;
+  mask-image: linear-gradient(100deg, transparent 30%, #000 75%); -webkit-mask-image: linear-gradient(100deg, transparent 30%, #000 75%);
+}
+/* reflejos diagonales que cruzan lento */
+.slide--total::after {
+  content: ''; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 220%; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(115deg, transparent 0 140px, rgb(255 255 255 / .07) 140px 210px, transparent 210px 260px, rgb(255 255 255 / .04) 260px 280px, transparent 280px 420px);
+}
+.slide--total .btn--accent { background: var(--night); color: var(--night-ink); }
+.slide--total .heroe__foco { background: radial-gradient(closest-side, rgb(255 255 255 / .38), rgb(255 255 255 / .1) 55%, transparent 72%); }
+.slide--total .heroe__piso { background: radial-gradient(closest-side, rgb(0 40 48 / .55), transparent); }
+.slide--total .despiece__cuerpo img { filter: drop-shadow(0 0 1px rgb(255 255 255 / .95)) drop-shadow(0 18px 30px rgb(0 40 48 / .5)); }
+.slide--total .despiece__bateria img { filter: drop-shadow(0 0 1px rgb(255 255 255 / .95)) drop-shadow(0 14px 22px rgb(0 40 48 / .45)); }
+.slide--total .despiece__guias path { stroke: rgb(255 255 255 / .75); }
+.slide--total .despiece__nombre { background: rgb(6 50 58 / .78); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .35); }
+.slide--total .heroe__cifra strong { background: linear-gradient(180deg, #fff, #d9fbff); -webkit-background-clip: text; background-clip: text; }
+.slide--total .heroe__cifra > span { color: #06363d; }
+@media (prefers-reduced-motion: no-preference) {
+  .slide--total::after { animation: fondo-reflejo 14s linear infinite; }
+  .slide--total:not(.is-current)::after { animation-play-state: paused; }
+}
+@keyframes fondo-reflejo { to { transform: translateX(463.4px); } } /* = un ciclo del patrón a 115° (420px / sen 115°) */
+
+/* cotas con medidas (salen cuando está desarmada) */
+.despiece__cotas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0; overflow: visible; }
+.despiece__cotas path { fill: none; stroke: rgb(255 255 255 / .85); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.despiece__cota {
+  position: absolute; z-index: 5; translate: -50% -50%; opacity: 0; white-space: nowrap;
+  font: 700 clamp(9px, .95vw, 12px)/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em;
+  color: #fff; text-shadow: 0 1px 3px rgb(0 50 58 / .7);
+}
+.despiece__cota--dado { left: 14%; top: 16.3%; }
+.despiece__cota--yunque { left: 31.2%; top: 12.6%; }
+.despiece__cota--bateria { left: 86.67%; top: 42%; }
+@media (prefers-reduced-motion: no-preference) {
+  .despiece__cotas { animation: dz-guias 8.4s linear infinite; }
+  .despiece__cota { animation: dz-nombre 8.4s linear infinite; animation-delay: .25s; }
+}

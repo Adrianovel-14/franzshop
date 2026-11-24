@@ -16,7 +16,13 @@ const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b
   const prods = (b.productos ?? []).map((id) => porId[id]).filter((p) => p && !agotado(p.id)).slice(0, 3).map((p) => ({
     id: p.id, nombre: p.nombre, precio: p.precio, oferta: b.ofertas?.[p.id], foto: foto(p), href: `${base}/producto/${p.id}/`,
   }));
+  // herramienta animada, solo visual (reemplaza a las 3 fotos)
+  const heroe = b.heroe ? {
+    foto: `${base}/${b.heroe.foto}`, dado: `${base}/${b.heroe.dado}`, bateria: `${base}/${b.heroe.bateria}`,
+    cifra: b.heroe.cifra, unidad: b.heroe.unidad,
+  } : undefined;
   return {
+    heroe,
     tema: b.tema ?? 'noche', etiqueta: b.etiqueta ?? '', titulo: b.titulo,
     texto: b.desde ? (b.texto ?? '').replace('{desde}', soles(minimoDe(b.desde))) : (b.texto ?? ''),
     boton, productos: prods,

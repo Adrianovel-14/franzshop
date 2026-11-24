@@ -14,6 +14,7 @@ export type Banner = {
   tema?: string; etiqueta?: string; titulo: string; texto?: string;
   boton?: { texto: string; ir: string }; productos?: string[];
   ofertas?: Record<string, number>; desde?: string; hasta?: string; lugar?: string;
+  heroe?: { foto: string; dado: string; bateria: string; cifra?: number; unidad?: string };
 };
 
 function leer(archivo: string) {
