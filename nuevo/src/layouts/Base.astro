@@ -31,6 +31,11 @@ const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats, 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<!-- Umami: no contar mis visitas si abro la tienda con ?no-contar -->
+<script is:inline>if (location.search.includes('no-contar')) localStorage.setItem('umami.disabled', '1');</script>
+<!-- Umami: estadísticas de visitas (solo cuenta en franzshopp.com, no en localhost) -->
+<script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="7f2a36d9-17fc-43d2-b410-125d6f5e96a6" data-domains="franzshopp.com"></script>
+
 </head>
 <body>
 <a class="skip" href="#contenido">Ir al contenido</a>

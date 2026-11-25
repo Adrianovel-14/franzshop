@@ -8,6 +8,10 @@ const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document)
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll(s)] as T[];
 const soles = (n: number) => 'S/ ' + Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const quieto = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Umami: cuenta una acción. Si Umami no cargó (o está bloqueado), no pasa nada.
+const medir = (nombre: string, datos?: Record<string, string | number>) => {
+  try { (window as any).umami?.track(nombre, datos); } catch {}
+};
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: string) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -75,6 +79,7 @@ export function iniciarTienda() {
     if (!hay(id) || byId[id].a) return;
     n = Math.max(1, Math.floor(n) || 1);
     cart[id] = Math.min((cart[id] || 0) + n, 999); save(); sync();
+    medir('agregar', { producto: byId[id].n, cantidad: n });
     toast(cart[id] > 1 ? `Agregado: ${byId[id].n} (ya tienes ${cart[id]} en tu pedido)` : 'Agregado: ' + byId[id].n);
     const b = $('[data-cart-open]')!; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
   }
@@ -286,6 +291,11 @@ export function iniciarTienda() {
   }
   function closeSug() { sug.hidden = true; q.setAttribute('aria-expanded', 'false'); q.removeAttribute('aria-activedescendant'); active = -1; }
   function runSearch() {
+    const texto = q.value.trim();
+    if (texto) {
+      const r = buscar(ix, texto).lista.length;
+      medir(r ? 'busqueda' : 'busqueda-sin-resultados', { texto: texto.toLowerCase(), resultados: r });
+    }
     if (!grid) { form.submit(); return; }
     state.q = q.value.trim(); state.page = 1; state.cat = 'todo'; closeSug(); render();
     toCatalog();
@@ -321,6 +331,14 @@ export function iniciarTienda() {
   const cartDlg = $<HTMLDialogElement>('[data-cart]')!;
   document.addEventListener('click', (e) => {
     const tg = e.target as Element;
+    // Umami: botones de WhatsApp (no detiene el clic: WhatsApp se abre igual)
+    const w = tg.closest<HTMLAnchorElement>('a[href*="wa.me"]');
+    if (w) {
+      const txt = new URL(w.href).searchParams.get('text') || '';
+      if (w.matches('[data-wa]')) medir('pedido-whatsapp', { total: total(), productos: lines().length });
+      else if (txt.includes('me avisan cuando tengan stock')) medir('avisame', { producto: txt.split('stock de: ')[1]?.split('?')[0] || '' });
+      else medir('preguntar-whatsapp', { pagina: location.pathname });
+    }
     const a = tg.closest<HTMLElement>('[data-add]');
     if (a) {
       e.preventDefault();
