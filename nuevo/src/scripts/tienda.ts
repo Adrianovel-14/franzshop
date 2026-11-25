@@ -8,9 +8,12 @@ const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document)
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll(s)] as T[];
 const soles = (n: number) => 'S/ ' + Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const quieto = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-// Umami: cuenta una acción. Si Umami no cargó (o está bloqueado), no pasa nada.
+// Umami: cuenta una acción. Si Umami todavía no cargó, espera a que termine de cargar la página;
+// si está bloqueado (bloqueador de anuncios), no pasa nada.
 const medir = (nombre: string, datos?: Record<string, string | number>) => {
-  try { (window as any).umami?.track(nombre, datos); } catch {}
+  const enviar = () => { try { (window as any).umami?.track(nombre, datos); } catch {} };
+  if ((window as any).umami || document.readyState === 'complete') enviar();
+  else addEventListener('load', enviar, { once: true });
 };
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: string) {
   const n = document.createElement(tag);
@@ -263,6 +266,8 @@ export function iniciarTienda() {
 
     render();
     if (state.q || params.has('cat')) requestAnimationFrame(toCatalog);
+    // búsqueda pendiente: alguien buscó desde otra página y llegó aquí → se cuenta ahora
+    if (sessionStorage.getItem('fs-medir-busqueda')) { sessionStorage.removeItem('fs-medir-busqueda'); medirBusqueda(state.q); }
   }
 
   /* ---------- buscador con sugerencias ---------- */
@@ -289,18 +294,26 @@ export function iniciarTienda() {
     sug.append(all);
     sug.hidden = false; q.setAttribute('aria-expanded', 'true'); active = -1;
   }
+  // Umami: cuenta una búsqueda, con o sin resultados
+  function medirBusqueda(texto: string) {
+    if (!texto) return;
+    const r = buscar(ix, texto).lista.length;
+    medir(r ? 'busqueda' : 'busqueda-sin-resultados', { texto: texto.toLowerCase(), resultados: r });
+  }
   function closeSug() { sug.hidden = true; q.setAttribute('aria-expanded', 'false'); q.removeAttribute('aria-activedescendant'); active = -1; }
   function runSearch() {
     const texto = q.value.trim();
-    if (texto) {
-      const r = buscar(ix, texto).lista.length;
-      medir(r ? 'busqueda' : 'busqueda-sin-resultados', { texto: texto.toLowerCase(), resultados: r });
+    if (!grid) {
+      // fuera de la portada (categoría, ficha): la página cambia antes de poder avisar a Umami,
+      // así que se anota y se cuenta al llegar a la portada (ver "búsqueda pendiente" arriba)
+      if (texto) sessionStorage.setItem('fs-medir-busqueda', texto);
+      form.submit(); return;
     }
-    if (!grid) { form.submit(); return; }
-    state.q = q.value.trim(); state.page = 1; state.cat = 'todo'; closeSug(); render();
+    medirBusqueda(texto);
+    state.q = texto; state.page = 1; state.cat = 'todo'; closeSug(); render();
     toCatalog();
   }
-  form.addEventListener('submit', (e) => { if (grid) { e.preventDefault(); runSearch(); } });
+  form.addEventListener('submit', (e) => { e.preventDefault(); runSearch(); });
   q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(suggest, 90); });
   q.addEventListener('focus', () => { if (q.value.trim()) suggest(); });
   q.addEventListener('keydown', (e) => {

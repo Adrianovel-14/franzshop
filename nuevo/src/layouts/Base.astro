@@ -2,8 +2,11 @@
 import '../styles/global.css';
 import { categorias, productos, base, whatsapp, foto, agotado, negocio, sitio, diccionario, textoBusqueda } from '../lib/datos';
 
-interface Props { title: string; description: string; image?: string; noindex?: boolean }
-const { title, description, image, noindex = false } = Astro.props;
+// schema: datos para Google (JSON-LD), ver src/lib/seo.ts
+interface Props { title: string; description: string; image?: string; noindex?: boolean; schema?: object }
+const { title, description, image, noindex = false, schema } = Astro.props;
+// "<" escapado igual que abajo, para que ningún texto pueda cerrar la etiqueta <script>
+const schemaJson = schema ? JSON.stringify(schema).replace(/</g, '\\u003c') : '';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const og = image ? new URL(image, Astro.site).href : undefined;
 
@@ -27,6 +30,9 @@ const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats, 
 <meta property="og:description" content={description}>
 <meta property="og:url" content={canonical}>
 {og && <meta property="og:image" content={og}>}
+<meta property="og:site_name" content="Franzshopp">
+<meta property="og:locale" content="es_PE">
+{schemaJson && <script type="application/ld+json" set:html={schemaJson}></script>}
 <link rel="icon" href={`${base}/favicon.png`} type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,7 +70,7 @@ const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats, 
   <nav class="catbar" aria-label="Categorías">
     <div class="wrap catbar__row">
       <a class="catbar__btn" href={`${base}/#catalogo`} data-cat="todo">Todo</a>
-      {categorias.map((c) => <a class="catbar__btn" href={`${base}/?cat=${c.id}#catalogo`} data-cat={c.id}>{c.corto}</a>)}
+      {categorias.map((c) => <a class="catbar__btn" href={`${base}/categoria/${c.id}/`} data-cat={c.id} aria-current={Astro.url.pathname.includes(`/categoria/${c.id}/`) ? 'page' : undefined}>{c.corto}</a>)}
     </div>
   </nav>
 </header>
@@ -85,7 +91,7 @@ const datosJson = JSON.stringify({ wa: whatsapp, base, sitio, p: mini, c: cats, 
     <div>
       <h2 class="footer__h">Categorías</h2>
       <ul class="footer__links">
-        {categorias.map((c) => <li><a href={`${base}/?cat=${c.id}#catalogo`} data-cat={c.id}>{c.nombre}</a></li>)}
+        {categorias.map((c) => <li><a href={`${base}/categoria/${c.id}/`} data-cat={c.id}>{c.nombre}</a></li>)}
       </ul>
     </div>
     <div>

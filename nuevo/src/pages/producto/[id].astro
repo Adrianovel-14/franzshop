@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { productos, catPorId, foto, soles, waLink, base, agotado, avisameTexto, negocio, type Producto } from '../../lib/datos';
+import { tituloProducto, descripcionProducto, schemaProducto, apodosDe } from '../../lib/seo';
 
 export function getStaticPaths() {
   return productos.map((p) => ({ params: { id: p.id }, props: { p } }));
@@ -12,6 +13,8 @@ const specs = [
   ['Incluye', p.incluye],
   ['Sirve para', p.uso ? p.uso.charAt(0).toUpperCase() + p.uso.slice(1) : undefined],
   ['Marca', p.marca],
+  // nombres populares (chicharra, esmeril…): ayudan a que Google la encuentre con esas palabras
+  ['También le dicen', apodosDe(p).join(', ') || undefined],
   ['Envío', `A todo el Perú desde ${negocio.ciudad}, se coordina por WhatsApp`],
   ['Recojo', negocio.recojo],
 ].filter(([, v]) => v) as [string, string][];
@@ -19,10 +22,10 @@ const sinStock = agotado(p.id);
 const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.foto && !agotado(x.id))
   .sort((a, b) => Math.abs(a.precio - p.precio) - Math.abs(b.precio - p.precio)).slice(0, 4);
 ---
-<Base title={`${p.nombre} · ${soles(p.precio)} · Franzshopp`} description={`${p.nombre} ${p.marca}. ${p.incluye ? 'Incluye ' + p.incluye + '. ' : ''}Pide por WhatsApp con envío a todo el Perú.`} image={p.foto ? foto(p) : undefined}>
+<Base title={tituloProducto(p)} description={descripcionProducto(p)} image={p.foto ? foto(p) : undefined} schema={schemaProducto(p)}>
   <nav class="wrap crumbs" aria-label="Ruta">
     <a href={`${base}/`}>Inicio</a><span aria-hidden="true">/</span>
-    <a href={`${base}/?cat=${p.cat}#catalogo`}>{cat?.nombre}</a>
+    <a href={`${base}/categoria/${p.cat}/`}>{cat?.nombre}</a>
   </nav>
 
   <section class="wrap pd">
@@ -67,7 +70,7 @@ const parecidos = productos.filter((x) => x.cat === p.cat && x.id !== p.id && x.
 
   {parecidos.length > 0 && (
     <section class="wrap sec" aria-labelledby="sim-h">
-      <div class="sec-head"><h2 id="sim-h">Más en {cat?.nombre}</h2><a class="sec-head__link" href={`${base}/?cat=${p.cat}#catalogo`}>Ver todo</a></div>
+      <div class="sec-head"><h2 id="sim-h">Más en {cat?.nombre}</h2><a class="sec-head__link" href={`${base}/categoria/${p.cat}/`}>Ver todo</a></div>
       <ul class="grid grid--4">
         {parecidos.map((x) => (
           <li class="card">

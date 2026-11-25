@@ -154,7 +154,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   flex: none; scroll-snap-align: start; padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 500;
   color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: color .2s, background-color .2s, border-color .2s;
 }
-.catbar__btn[aria-current='true'] { color: var(--ink); background: var(--surface-2); border-color: var(--line-2); }
+.catbar__btn[aria-current='true'], .catbar__btn[aria-current='page'] { color: var(--ink); background: var(--surface-2); border-color: var(--line-2); }
 @media (hover: hover) { .catbar__btn:hover { color: var(--ink); } }
 
 /* ---------- carrusel (portada) ----------
@@ -713,3 +713,12 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   .despiece__cotas { animation: dz-guias 8.4s linear infinite; }
   .despiece__cota { animation: dz-nombre 8.4s linear infinite; animation-delay: .25s; }
 }
+
+/* ---------- página de categoría (pages/categoria/[id].astro) ---------- */
+.catpage { padding-top: 8px; }
+.catpage__head { margin-bottom: 24px; max-width: 60ch; }
+.catpage__h { font-size: clamp(30px, 6vw, 48px); line-height: 1.05; letter-spacing: -.03em; margin: 8px 0 10px; }
+.catpage__txt { color: var(--muted); font-size: 16px; text-wrap: pretty; }
+.catpage__foot { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); display: grid; gap: 10px; color: var(--muted); font-size: 15px; }
+.catpage__foot a { color: var(--ink); }
+.catpage__more { line-height: 1.9; }

@@ -3,13 +3,14 @@ import Base from '../layouts/Base.astro';
 import Carrusel, { type Slide } from '../components/Carrusel';
 import IconoCategoria from '../components/IconoCategoria.astro';
 import { banners, categorias, productos, porId, foto, soles, minimoDe, base, whatsapp, agotado } from '../lib/datos';
+import { schemaInicio } from '../lib/seo';
 
 const hoy = new Date().toISOString().slice(0, 10);
 const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b) => {
   const ir = b.boton?.ir ?? '#catalogo';
   const boton = { texto: b.boton?.texto ?? 'Ver catálogo', href: '#catalogo' } as Slide['boton'];
   if (ir === 'whatsapp') { boton.href = `https://wa.me/${whatsapp}`; boton.wa = true; }
-  else if (ir.startsWith('cat:')) { boton.cat = ir.slice(4); boton.href = `?cat=${boton.cat}#catalogo`; }
+  else if (ir.startsWith('cat:')) { boton.cat = ir.slice(4); boton.href = `${base}/categoria/${boton.cat}/`; }
   else if (ir.startsWith('buscar:')) boton.href = `?q=${encodeURIComponent(ir.slice(7))}#catalogo`;
   else boton.href = ir;
   // en el carrusel no salen productos agotados
@@ -33,7 +34,7 @@ const slides: Slide[] = banners.filter((b) => !b.hasta || b.hasta >= hoy).map((b
 
 const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(p.id)).sort((a, b) => b.precio - a.precio).slice(0, 10);
 ---
-<Base title="Franzshopp · Herramientas Total en Perú" description={`${productos.length} herramientas Total con garantía y envío a todo el Perú. Arma tu pedido y lo cerramos por WhatsApp.`}>
+<Base title="Herramientas Total en Perú – Combos, taladros y más | Franzshopp" description={`${productos.length} herramientas Total con precios en soles y envío a todo el Perú desde Arequipa. Arma tu pedido y lo cerramos por WhatsApp.`} schema={schemaInicio()}>
   <h1 class="visually-hidden">Franzshopp, herramientas Total en Arequipa con envío a todo el Perú</h1>
 
   <div class="wrap">
@@ -47,7 +48,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(
     <ul class="cats">
       {categorias.map((c) => (
         <li>
-          <a class="cat" href={`?cat=${c.id}#catalogo`} data-cat={c.id}>
+          <a class="cat" href={`${base}/categoria/${c.id}/`} data-cat={c.id}>
             <IconoCategoria id={c.id} class="cat__ico" />
             <span class="cat__name">{c.nombre}</span>
           </a>
@@ -74,7 +75,7 @@ const combos = productos.filter((p) => p.cat === 'combos' && p.foto && !agotado(
   <section class="wrap sec" aria-labelledby="feat-h">
     <div class="sec-head">
       <h2 id="feat-h">Combos más completos</h2>
-      <a href="?cat=combos#catalogo" class="sec-head__link" data-cat="combos">Ver los {categorias.find((c) => c.id === 'combos')?.total} combos</a>
+      <a href={`${base}/categoria/combos/`} class="sec-head__link" data-cat="combos">Ver los {categorias.find((c) => c.id === 'combos')?.total} combos</a>
     </div>
     <ul class="rail" aria-label="Combos">
       {combos.map((p) => (

@@ -1,0 +1,60 @@
+---
+// Página propia de cada categoría: franzshopp.com/categoria/combos/, /categoria/inalambricas/, etc.
+// Sirve para Google (cada categoría tiene su dirección, título y texto) y para compartir el link.
+// Los textos y títulos están en src/lib/seo.ts.
+import Base from '../../layouts/Base.astro';
+import { productos, categorias, catPorId, foto, soles, base, agotado, avisameTexto, waLink, negocio, portada } from '../../lib/datos';
+import { textoCategoria, tituloCategoria, descripcionCategoria, schemaCategoria } from '../../lib/seo';
+
+export function getStaticPaths() {
+  return categorias.map((c) => ({ params: { id: c.id } }));
+}
+const { id } = Astro.params as { id: string };
+const cat = catPorId[id];
+// primero lo que hay en stock, luego lo agotado (igual que el catálogo)
+const lista = productos.filter((p) => p.cat === id).sort((a, b) => Number(agotado(a.id)) - Number(agotado(b.id)));
+const otras = categorias.filter((c) => c.id !== id);
+const img = portada(id);
+---
+<Base title={tituloCategoria(id)} description={descripcionCategoria(id)} image={img ? foto(img) : undefined} schema={schemaCategoria(id)}>
+  <nav class="wrap crumbs" aria-label="Ruta">
+    <a href={`${base}/`}>Inicio</a><span aria-hidden="true">/</span>
+    <span aria-current="page">{cat?.nombre}</span>
+  </nav>
+
+  <section class="wrap sec catpage" aria-labelledby="cat-h">
+    <header class="catpage__head">
+      <p class="eyebrow">{lista.length} productos</p>
+      <h1 id="cat-h" class="catpage__h">{cat?.nombre}</h1>
+      <p class="catpage__txt">{textoCategoria(id)} Precios en soles, envío a todo el Perú desde {negocio.ciudad} o recojo en almacén.</p>
+    </header>
+
+    <ul class="grid grid--4">
+      {lista.map((x) => {
+        const sin = agotado(x.id);
+        return (
+          <li class:list={['card', { 'card--agotado': sin }]}>
+            <a class="card__open" href={`${base}/producto/${x.id}/`}>
+              <span class="card__media">
+                <span class="card__pic">{x.foto ? <img src={foto(x)} alt={x.nombre} width="600" height="600" loading="lazy" decoding="async" /> : <span class="nopic">{x.nombre}</span>}</span>
+                {sin ? <span class="badge badge--agotado">Sin stock</span> : id === 'cabezales' ? <span class="badge">Sin batería</span> : id === 'combos' ? <span class="badge badge--accent">Combo</span> : null}
+              </span>
+              <span class="card__body"><span class="card__cat">{cat?.corto}</span><span class="card__name">{x.nombre}</span></span>
+            </a>
+            <div class="card__foot">
+              <span class="card__price num">{soles(x.precio)}</span>
+              {sin
+                ? <a class="add add--avisame" href={waLink(avisameTexto(x))} target="_blank" rel="noopener" aria-label={`Sin stock. Pedir aviso por WhatsApp cuando llegue ${x.nombre}`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/></svg><span>Avísame</span></a>
+                : <button type="button" class="add" data-add={x.id} aria-label={`Agregar ${x.nombre} al pedido`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Agregar</span></button>}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+
+    <div class="catpage__foot">
+      <p>¿No encuentras lo que buscas? <a href={waLink(`Hola Franzshopp, estoy buscando algo de ${cat?.nombre}`)}>Pregúntanos por WhatsApp</a></p>
+      <p class="catpage__more">Otras categorías: {otras.map((c, i) => <>{i > 0 && ' · '}<a href={`${base}/categoria/${c.id}/`}>{c.nombre}</a></>)}</p>
+    </div>
+  </section>
+</Base>
